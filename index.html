@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JIGS 치구관리 전산화 시스템 v3</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bl:#1D4ED8;--bl-l:#EFF6FF;--gn:#059669;--gn-l:#DCFCE7;--pu:#7C3AED;--pu-l:#EDE9FE;--am:#D97706;--am-l:#FFFBEB;--rd:#DC2626;--rd-l:#FEF2F2;--gy:#64748B;--gy-l:#F8FAFC;--bg:#F1F5F9;--bd:#E2E8F0;--bd2:#CBD5E1;--tx:#0F172A;--tx2:#475569;--tx3:#94A3B8;--r:8px;--r2:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Malgun Gothic','맑은 고딕',sans-serif;background:var(--bg);color:var(--tx);font-size:13px;overflow:hidden;height:100vh}
+.app{display:flex;height:100vh}
+.sb{width:196px;background:#0F172A;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-logo{padding:14px 14px 10px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-logo .nm{font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px}
+.sb-logo .bk{background:var(--bl);color:#fff;font-size:10px;padding:1px 6px;border-radius:4px}
+.sb-logo .sub{font-size:10px;color:#475569;margin-top:2px}
+.nav-sec{padding:10px 0 4px}
+.nav-lbl{font-size:10px;color:#334155;padding:0 13px 5px;text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 13px;font-size:12px;color:#94A3B8;cursor:pointer;border-left:2px solid transparent;transition:all .13s}
+.ni:hover{background:rgba(255,255,255,.04);color:#CBD5E1}
+.ni.active{background:rgba(29,78,216,.18);color:#93C5FD;border-left-color:var(--bl)}
+.ni i{font-size:15px;flex-shrink:0}
+.ni .bc{margin-left:auto;background:var(--rd);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px}
+.ct{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid var(--bd);padding:0 18px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-l{display:flex;align-items:center;gap:8px}
+.pg-title{font-size:15px;font-weight:700;color:var(--tx)}
+.pg-sub{font-size:11px;color:var(--tx3)}
+.tb-r{display:flex;align-items:center;gap:10px}
+.main{flex:1;overflow-y:auto;padding:16px 18px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--r2);padding:14px 16px}
+.ct-title{font-size:12px;font-weight:700;color:var(--tx);margin-bottom:11px;display:flex;align-items:center;gap:5px}
+.ct-title i{font-size:14px;color:var(--bl)}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--bd);border-radius:var(--r2);padding:13px 14px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.bl::before{background:var(--bl)}.kpi.gn::before{background:var(--gn)}.kpi.pu::before{background:var(--pu)}.kpi.am::before{background:var(--am)}.kpi.rd::before{background:var(--rd)}
+.kpi-lbl{font-size:10px;color:var(--tx3);margin-bottom:3px}
+.kpi-val{font-size:21px;font-weight:700;margin-bottom:1px}
+.kpi.bl .kpi-val{color:var(--bl)}.kpi.gn .kpi-val{color:var(--gn)}.kpi.pu .kpi-val{color:var(--pu)}.kpi.am .kpi-val{color:var(--am)}.kpi.rd .kpi-val{color:var(--rd)}
+.kpi-sub{font-size:10px;color:var(--tx3)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.g23{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+.mb12{margin-bottom:12px}
+.fbar{background:#fff;border:1px solid var(--bd);border-radius:var(--r2);padding:9px 13px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fbar label{font-size:11px;color:var(--tx3)}
+select,input[type=text],input[type=date],input[type=number]{font-size:12px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd2);color:var(--tx);background:#fff;font-family:inherit}
+select:focus,input:focus{outline:none;border-color:var(--bl)}
+.btn{font-size:12px;padding:5px 13px;border-radius:6px;border:1px solid var(--bd2);background:#fff;color:var(--tx2);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;transition:all .11s}
+.btn:hover{background:var(--gy-l)}
+.btn-p{background:var(--bl);border-color:var(--bl);color:#fff}
+.btn-p:hover{background:#1e40af}
+.btn-sm{font-size:11px;padding:4px 11px}
+.tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:2px}
+.tag-jig{background:var(--gn-l);color:#166534}.tag-robot{background:var(--pu-l);color:#4C1D95}.tag-pos{background:var(--am-l);color:#92400E}.tag-bl{background:var(--bl-l);color:#1e40af}.tag-gy{background:var(--gy-l);color:var(--gy)}.tag-rd{background:var(--rd-l);color:#991B1B}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--gy-l);padding:7px 9px;text-align:left;font-weight:700;color:var(--tx2);border-bottom:1px solid var(--bd);white-space:nowrap;position:sticky;top:0;z-index:1}
+.tbl td{padding:6px 9px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#F8FAFC}
+.tbl-wrap{overflow:auto;max-height:440px;border-radius:var(--r);border:1px solid var(--bd)}
+.page{display:none}.page.active{display:block}
+.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.bar-lbl{font-size:11px;color:var(--tx2);width:108px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:8px;background:var(--bd);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s}
+.bar-val{font-size:11px;color:var(--tx3);width:38px;text-align:right;flex-shrink:0}
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:200;align-items:center;justify-content:center}
+.modal-wrap.open{display:flex}
+.modal{background:#fff;border-radius:var(--r2);padding:22px 24px;width:860px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.2)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
+.modal-title{font-size:15px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:7px}
+.modal-x{width:28px;height:28px;border:none;background:var(--gy-l);border-radius:6px;cursor:pointer;font-size:16px;color:var(--tx3);display:flex;align-items:center;justify-content:center}
+.modal-ft{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:13px;border-top:1px solid var(--bd)}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:11px;font-weight:700;color:var(--tx2)}
+.fi{padding:7px 9px;border:1px solid var(--bd2);border-radius:6px;font-size:12px;font-family:inherit;color:var(--tx);width:100%}
+.fi:focus{outline:none;border-color:var(--bl)}
+.fi.err{border-color:var(--rd);background:#fff9f9}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:11px}
+.frow1{margin-bottom:11px}
+.req{color:var(--rd)}
+.step-lbl{font-size:11px;font-weight:700;color:var(--tx3);margin:14px 0 10px;display:flex;align-items:center;gap:6px}
+.step-num{background:var(--bl);color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+/* location UI */
+.loc-wrap{display:grid;grid-template-columns:1fr 196px;gap:0;min-height:300px;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
+.loc-canvas-col{display:flex;flex-direction:column}
+.loc-top-bar{padding:7px 10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:6px;background:var(--gy-l)}
+.loc-vtabs{display:flex;gap:3px}
+.loc-vtab{padding:4px 9px;border:1px solid var(--bd2);border-radius:5px;font-size:11px;cursor:pointer;color:var(--tx3);background:#fff;font-family:inherit;transition:all .1s}
+.loc-vtab:hover{background:var(--gy-l)}
+.loc-vtab.active{background:var(--bl);border-color:var(--bl);color:#fff;font-weight:600}
+.loc-vtab .ok{color:#4ade80;font-size:9px;margin-left:2px}
+.loc-area{position:relative;flex:1;background:#F8FAFC;cursor:crosshair;min-height:240px}
+.loc-area canvas{position:absolute;inset:0;width:100%;height:100%}
+.loc-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;pointer-events:none}
+.loc-hint.hidden{display:none}
+.loc-hint i{font-size:28px;color:var(--bd2)}
+.loc-hint p{font-size:11px;color:var(--tx3);text-align:center}
+.loc-hint small{font-size:10px;color:var(--bd2)}
+.loc-bottom{padding:6px 10px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--gy-l)}
+.loc-leg{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--tx3)}
+.loc-leg-dot{width:8px;height:8px;border-radius:50%}
+.loc-panel{border-left:1px solid var(--bd);display:flex;flex-direction:column;padding:10px;gap:8px;background:#fff;overflow-y:auto}
+.loc-sec-lbl{font-size:10px;font-weight:700;color:var(--tx3);display:flex;align-items:center;justify-content:space-between}
+.loc-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.loc-tb{padding:5px 3px;border:1px solid var(--bd2);border-radius:5px;font-size:10px;cursor:pointer;background:#fff;color:var(--tx3);font-family:inherit;display:flex;align-items:center;justify-content:center;gap:2px;transition:all .1s}
+.loc-tb:hover{background:var(--gy-l)}
+.loc-tb.t-repair.sel{border-color:var(--rd);background:var(--rd-l);color:#991B1B;font-weight:600}
+.loc-tb.t-replace.sel{border-color:var(--am);background:var(--am-l);color:#92400E;font-weight:600}
+.loc-tb.t-inspect.sel{border-color:var(--bl);background:var(--bl-l);color:#1e40af;font-weight:600}
+.loc-tb.t-improve.sel{border-color:var(--gn);background:var(--gn-l);color:#166534;font-weight:600}
+.loc-parts-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;max-height:90px;overflow-y:auto}
+.loc-pb{padding:3px 5px;border:1px solid var(--bd2);border-radius:4px;font-size:10px;cursor:pointer;background:#fff;color:var(--tx3);font-family:inherit;text-align:left;transition:all .1s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.loc-pb:hover{background:var(--gy-l);border-color:var(--bl)}
+.loc-pin-list{display:flex;flex-direction:column;gap:3px;max-height:110px;overflow-y:auto}
+.loc-pi{display:flex;align-items:center;gap:4px;padding:4px 6px;border:1px solid #F1F5F9;border-radius:5px;font-size:10px}
+.loc-pi:hover{background:var(--gy-l)}
+.loc-pi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.loc-pi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)}
+.loc-pi-del{border:none;background:none;cursor:pointer;color:var(--bd2);font-size:11px;padding:0 2px}
+.loc-pi-del:hover{color:var(--rd)}
+.loc-upload{border:1.5px dashed var(--bd2);border-radius:6px;padding:8px;text-align:center;cursor:pointer;position:relative;font-size:10px;color:var(--tx3)}
+.loc-upload:hover{border-color:var(--bl);background:var(--bl-l)}
+.loc-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.loc-upload i{display:block;font-size:16px;color:var(--bd2);margin-bottom:3px}
+.loc-empty{font-size:10px;color:var(--tx3);text-align:center;padding:10px 0}
+/* eq card */
+.eq-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
+.eq-card{background:#fff;border:1px solid var(--bd);border-radius:var(--r2);padding:11px 12px;cursor:pointer;transition:border-color .13s}
+.eq-card:hover{border-color:var(--bl)}
+.eq-card-name{font-size:12px;font-weight:700;color:var(--tx);margin:5px 0 2px}
+.eq-card-code{font-size:10px;color:var(--tx3);margin-bottom:8px}
+.eq-card-stats{display:flex;justify-content:space-between;border-top:1px solid var(--bd);padding-top:7px}
+.eq-stat-val{font-size:13px;font-weight:700;color:var(--bl);text-align:center}
+.eq-stat-lbl{font-size:9px;color:var(--tx3);text-align:center}
+/* sched */
+.sched-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--bd)}
+.sched-item:last-child{border-bottom:none}
+.sched-dt{font-size:10px;font-weight:700;color:#fff;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.sched-name{font-size:12px;font-weight:600;color:var(--tx)}
+.sched-desc{font-size:10px;color:var(--tx3);margin-top:1px}
+.confirm-del{background:var(--rd-l);border:1px solid #fecaca;border-radius:6px;padding:11px 13px;margin-bottom:14px;font-size:12px;color:#7f1d1d;display:none}
+.eq-photo-box{border:1px solid var(--bd);border-radius:var(--r);padding:8px;display:flex;flex-direction:column;gap:6px;background:var(--gy-l)}
+.eq-photo-lbl{font-size:11px;font-weight:700;color:var(--tx2);text-align:center}
+.eq-photo-preview{height:90px;border-radius:6px;background:#fff;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.eq-photo-preview i{font-size:24px;color:var(--bd2)}
+.eq-photo-preview img{width:100%;height:100%;object-fit:cover}
+.eq-photo-preview .eq-photo-del{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(15,23,42,.65);color:#fff;border:none;cursor:pointer;font-size:11px;display:none;align-items:center;justify-content:center}
+.eq-photo-preview:hover .eq-photo-del{display:flex}
+.eq-photo-upload{border:1.5px dashed var(--bd2);border-radius:6px;padding:5px;text-align:center;cursor:pointer;position:relative;font-size:10px;color:var(--tx3);display:flex;align-items:center;justify-content:center;gap:4px}
+.eq-photo-upload:hover{border-color:var(--bl);background:var(--bl-l);color:var(--bl)}
+.eq-photo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.eq-card-photo{height:84px;border-radius:6px;background:var(--gy-l);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:6px;border:1px solid var(--bd)}
+.eq-card-photo img{width:100%;height:100%;object-fit:cover}
+.eq-card-photo i{font-size:22px;color:var(--bd2)}
+.toast{position:fixed;bottom:18px;right:18px;background:#0F172A;color:#fff;padding:10px 16px;border-radius:8px;font-size:12px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="nm"><i class="ti ti-tool" style="color:#60A5FA"></i>JIGS<span class="bk">v3</span></div>
+    <div class="sub">치구관리 전산화 시스템</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">메인</div>
+    <div class="ni active" onclick="go('dashboard')"><i class="ti ti-layout-dashboard"></i>대시보드</div>
+    <div class="ni" onclick="go('equipment')"><i class="ti ti-tool"></i>치구 현황</div>
+    <div class="ni" onclick="go('history')"><i class="ti ti-clipboard-list"></i>수리/교체 이력<span class="bc" id="sb-cnt">152</span></div>
+    <div class="ni" onclick="go('schedule')"><i class="ti ti-calendar-check"></i>점검 일정</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">분석</div>
+    <div class="ni" onclick="go('analysis')"><i class="ti ti-chart-bar"></i>빈도/비용 분석</div>
+    <div class="ni" onclick="go('history');openHistForm()"><i class="ti ti-plus"></i>이력 등록</div>
+  </div>
+  <div class="nav-sec" style="margin-top:auto">
+    <div class="nav-lbl">시스템</div>
+    <div class="ni"><i class="ti ti-settings"></i>설정</div>
+  </div>
+</aside>
+<div class="ct">
+<div class="topbar">
+  <div class="tb-l">
+    <span class="pg-title" id="pgTitle">대시보드</span>
+    <span class="pg-sub" id="pgSub">2023~2026년 · 152건 누계</span>
+  </div>
+  <div class="tb-r">
+    <button class="btn btn-p btn-sm" onclick="go('history');openHistForm()"><i class="ti ti-plus"></i>이력 등록</button>
+    <span style="font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:5px"><span style="width:26px;height:26px;border-radius:50%;background:var(--bl);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">홍</span>홍길동 · 설비팀</span>
+  </div>
+</div>
+<div class="main">
+
+<!-- ══ DASHBOARD ══ -->
+<div id="p-dashboard" class="page active">
+  <div class="fbar">
+    <label>년도</label><select id="db-yr" onchange="renderDB()"><option value="all">전체</option><option>2023</option><option>2024</option><option>2025</option><option>2026</option></select>
+    <label>설비유형</label><select id="db-tp" onchange="renderDB()"><option value="all">전체</option><option>가접치구</option><option>로봇설비</option><option>용접포지셔너</option></select>
+    <label>기종</label><select id="db-md" onchange="renderDB()"><option value="all">전체</option></select>
+    <button class="btn btn-sm" onclick="resetSel(['db-yr','db-tp','db-md']);renderDB()"><i class="ti ti-refresh"></i>초기화</button>
+  </div>
+  <div class="kpi-row" id="db-kpi"></div>
+  <div class="g3">
+    <div class="card"><div class="ct-title"><i class="ti ti-chart-bar"></i>월별 발생건수</div><div style="position:relative;height:175px"><canvas id="c-mo" aria-label="월별 건수"></canvas></div></div>
+    <div class="card"><div class="ct-title"><i class="ti ti-chart-pie"></i>설비유형 비율</div><div style="position:relative;height:120px"><canvas id="c-tp" aria-label="유형별"></canvas></div><div id="tp-leg" style="font-size:10px;margin-top:7px"></div></div>
+    <div class="card"><div class="ct-title"><i class="ti ti-chart-bar"></i>연도별 건수</div><div style="position:relative;height:120px"><canvas id="c-yr" aria-label="연도별"></canvas></div><div id="yr-leg" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct-title"><i class="ti ti-chart-bar"></i>기종별 발생건수 (TOP10)</div><div id="md-bars"></div></div>
+    <div class="card"><div class="ct-title"><i class="ti ti-chart-pie"></i>수리유형 비율</div><div style="position:relative;height:190px"><canvas id="c-rp" aria-label="수리유형"></canvas></div><div id="rp-leg" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;font-size:10px"></div></div>
+  </div>
+  <div class="card mb12"><div class="ct-title" style="justify-content:space-between"><span><i class="ti ti-history"></i>최근 이력 (20건)</span><button class="btn btn-sm" onclick="go('history')">전체보기 →</button></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>날짜</th><th>기종</th><th>유형</th><th>수리유형</th><th>원인분류</th><th>비용(원)</th><th>위치핀</th><th>내역</th></tr></thead><tbody id="db-rec"></tbody></table></div></div>
+</div>
+
+<!-- ══ EQUIPMENT ══ -->
+<div id="p-equipment" class="page">
+  <div class="fbar">
+    <label>유형</label><select id="eq-tp" onchange="renderEQ()"><option value="all">전체</option><option>가접치구</option><option>로봇설비</option><option>용접포지셔너</option></select>
+    <label>상태</label><select id="eq-st" onchange="renderEQ()"><option value="all">전체</option><option>운용중</option><option>점검중</option><option>휴지</option></select>
+    <input type="text" id="eq-kw" placeholder="기종명·코드 검색..." oninput="renderEQ()" style="width:170px">
+    <button class="btn btn-sm" onclick="resetSel(['eq-tp','eq-st']);document.getElementById('eq-kw').value='';renderEQ()"><i class="ti ti-refresh"></i></button>
+    <button class="btn btn-p btn-sm" onclick="openEqM(null)" style="margin-left:auto"><i class="ti ti-plus"></i>설비 추가</button>
+  </div>
+  <div class="kpi-row" id="eq-kpi"></div>
+  <div class="eq-grid" id="eq-grid"></div>
+  <div class="card"><div class="ct-title" style="justify-content:space-between"><span><i class="ti ti-list"></i>설비 목록 <span id="eq-cnt" style="font-size:10px;font-weight:400;color:var(--tx3)"></span></span><button class="btn btn-p btn-sm" onclick="openEqM(null)"><i class="ti ti-plus"></i>설비 추가</button></div><div class="tbl-wrap" style="max-height:480px"><table class="tbl"><thead><tr><th>코드</th><th>기종명</th><th>설비명</th><th>유형</th><th>라인</th><th>설치일</th><th>이력</th><th>최근이력</th><th>누적비용</th><th>상태</th><th style="text-align:center">관리</th></tr></thead><tbody id="eq-list"></tbody></table></div></div>
+</div>
+
+<!-- ══ HISTORY ══ -->
+<div id="p-history" class="page">
+  <div class="fbar">
+    <label>년도</label><select id="hi-yr" onchange="renderHI()"><option value="all">전체</option><option>2023</option><option>2024</option><option>2025</option><option>2026</option></select>
+    <label>월</label><select id="hi-mo" onchange="renderHI()"><option value="all">전체</option></select>
+    <label>유형</label><select id="hi-tp" onchange="renderHI()"><option value="all">전체</option><option>가접치구</option><option>로봇설비</option><option>용접포지셔너</option></select>
+    <label>기종</label><select id="hi-md" onchange="renderHI()"><option value="all">전체</option></select>
+    <label>수리유형</label><select id="hi-rp" onchange="renderHI()"><option value="all">전체</option></select>
+    <input type="text" id="hi-kw" placeholder="내용 검색..." oninput="renderHI()" style="width:130px">
+    <button class="btn btn-sm" onclick="resetHI()"><i class="ti ti-refresh"></i></button>
+    <button class="btn btn-p btn-sm" onclick="openHistForm()" style="margin-left:auto"><i class="ti ti-plus"></i>이력 등록</button>
+  </div>
+  <div class="card"><div class="ct-title" style="justify-content:space-between"><span><i class="ti ti-clipboard-list"></i>수리/교체 이력 <span id="hi-cnt" style="font-size:10px;font-weight:400;color:var(--tx3)"></span></span></div><div class="tbl-wrap" style="max-height:530px"><table class="tbl"><thead><tr><th>NO</th><th>년도</th><th>발생일자</th><th>기종</th><th>유형</th><th>수리유형</th><th>발생원인</th><th>원인분류</th><th>비용(원)</th><th>위치핀</th><th>내역</th><th>비고</th></tr></thead><tbody id="hi-body"></tbody></table></div></div>
+</div>
+
+<!-- ══ SCHEDULE ══ -->
+<div id="p-schedule" class="page">
+  <div class="g23">
+    <div class="card"><div class="ct-title"><i class="ti ti-calendar-check"></i>2025년 점검 일정</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>코드</th><th>기종</th><th>유형</th><th>점검항목</th><th>예정일</th><th>주기</th><th>최근이력</th><th>상태</th></tr></thead><tbody id="sched-body"></tbody></table></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card"><div class="ct-title"><i class="ti ti-alert-triangle"></i>긴급/임박 점검</div><div id="urgent-list"></div></div>
+      <div class="card"><div class="ct-title"><i class="ti ti-clock"></i>이달(7월) 예정</div><div id="month-sched"></div></div>
+    </div>
+  </div>
+  <div class="card"><div class="ct-title"><i class="ti ti-layout-grid"></i>기종별 마지막 점검 현황</div><div id="last-inspect"></div></div>
+</div>
+
+<!-- ══ ANALYSIS ══ -->
+<div id="p-analysis" class="page">
+  <div class="fbar">
+    <label>기간</label><select id="an-yr" onchange="renderAN()"><option value="all">전체(2023~2026)</option><option>2023</option><option>2024</option><option>2025</option><option>2026</option></select>
+    <label>유형</label><select id="an-tp" onchange="renderAN()"><option value="all">전체</option><option>가접치구</option><option>로봇설비</option><option>용접포지셔너</option></select>
+  </div>
+  <div class="kpi-row" id="an-kpi"></div>
+  <div class="g2">
+    <div class="card"><div class="ct-title"><i class="ti ti-chart-bar"></i>수리유형별 빈도 & 비용</div><div style="position:relative;height:220px"><canvas id="c-an-rp" aria-label="수리유형"></canvas></div></div>
+    <div class="card"><div class="ct-title"><i class="ti ti-chart-pie"></i>발생원인 분류</div><div style="position:relative;height:200px"><canvas id="c-an-ca" aria-label="원인분류"></canvas></div><div id="ca-leg" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;font-size:10px"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct-title"><i class="ti ti-coin"></i>기종별 누적비용 TOP10</div><div id="cost-bars"></div></div>
+    <div class="card"><div class="ct-title"><i class="ti ti-trending-up"></i>월별 건수 & 비용 추이</div><div style="position:relative;height:190px"><canvas id="c-trend" aria-label="추이"></canvas></div></div>
+  </div>
+  <div class="card"><div class="ct-title"><i class="ti ti-rotate-clockwise"></i>예방정비 주기 추정</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>기종</th><th>수리유형</th><th>발생건수</th><th>최초</th><th>최근</th><th>평균간격(일)</th><th>다음예정</th><th>권장주기</th></tr></thead><tbody id="pm-body"></tbody></table></div></div>
+</div>
+
+</div></div></div>
+
+<!-- ══ 이력 등록 모달 ══ -->
+<div class="modal-wrap" id="histModal">
+<div class="modal">
+  <div class="modal-hd">
+    <div class="modal-title"><i class="ti ti-plus-circle" style="color:var(--bl)"></i>수리/교체 이력 등록</div>
+    <button class="modal-x" onclick="closeM('histModal')"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="step-lbl"><span class="step-num">1</span>기본 정보</div>
+  <div class="frow3">
+    <div class="fg"><label class="fl">기종 <span class="req">*</span></label><select class="fi" id="nf-md"><option value="">선택</option></select></div>
+    <div class="fg"><label class="fl">설비유형 <span class="req">*</span></label><select class="fi" id="nf-tp" onchange="populateRepairSelect(this.value,'nf-rp');populateCauseSelect(this.value,'nf-ca')"><option value="">선택</option><option>가접치구</option><option>로봇설비</option><option>용접포지셔너</option></select></div>
+    <div class="fg"><label class="fl">수리유형 <span class="req">*</span></label><select class="fi" id="nf-rp"><option value="">설비유형을 먼저 선택하세요</option></select></div>
+  </div>
+  <div class="frow3">
+    <div class="fg"><label class="fl">발생일자 <span class="req">*</span></label><input type="date" class="fi" id="nf-dt"></div>
+    <div class="fg"><label class="fl">원인분류 <span class="req">*</span></label><select class="fi" id="nf-ca"><option value="">설비유형을 먼저 선택하세요</option></select></div>
+    <div class="fg"><label class="fl">비용(원)</label><input type="number" class="fi" id="nf-cost" placeholder="0" min="0"></div>
+  </div>
+  <div class="frow2">
+    <div class="fg"><label class="fl">발생원인 상세</label><input type="text" class="fi" id="nf-reason" placeholder="발생 원인 상세 입력"></div>
+    <div class="fg"><label class="fl">수리/조치 내역</label><input type="text" class="fi" id="nf-desc" placeholder="조치 내역 입력"></div>
+  </div>
+  <div class="step-lbl"><span class="step-num">2</span>교체/수리 위치 지정 <span style="font-size:10px;font-weight:400;color:var(--tx3)">(도면 클릭→핀 추가 · 핀 클릭→삭제 · 추천부위 클릭→자동핀)</span></div>
+  <div class="loc-wrap">
+    <div class="loc-canvas-col">
+      <div class="loc-top-bar">
+        <div class="loc-vtabs" id="loc-vtabs"></div>
+        <span style="margin-left:auto;font-size:10px;color:var(--tx3)" id="loc-img-status"></span>
+      </div>
+      <div class="loc-area" id="locArea">
+        <canvas id="locCanvas"></canvas>
+        <div class="loc-hint" id="locHint">
+          <i class="ti ti-photo"></i>
+          <p>도면 이미지를 업로드하거나<br>드래그 & 드롭</p>
+          <small>PNG · JPG · 업로드 없이도 핀 추가 가능</small>
+        </div>
+      </div>
+      <div class="loc-bottom">
+        <div class="loc-leg"><div class="loc-leg-dot" style="background:var(--rd)"></div>수리</div>
+        <div class="loc-leg"><div class="loc-leg-dot" style="background:var(--am)"></div>교체</div>
+        <div class="loc-leg"><div class="loc-leg-dot" style="background:var(--bl)"></div>점검</div>
+        <div class="loc-leg"><div class="loc-leg-dot" style="background:var(--gn)"></div>개선</div>
+        <span style="font-size:10px;color:var(--tx3);margin-left:auto">클릭=핀추가 · 핀클릭=삭제</span>
+      </div>
+    </div>
+    <div class="loc-panel">
+      <div class="loc-sec-lbl">조치유형</div>
+      <div class="loc-type-grid">
+        <button class="loc-tb t-repair" id="lt-repair" onclick="setLT('repair')"><i class="ti ti-tools" style="font-size:11px"></i>수리</button>
+        <button class="loc-tb t-replace sel" id="lt-replace" onclick="setLT('replace')"><i class="ti ti-replace" style="font-size:11px"></i>교체</button>
+        <button class="loc-tb t-inspect" id="lt-inspect" onclick="setLT('inspect')"><i class="ti ti-search" style="font-size:11px"></i>점검</button>
+        <button class="loc-tb t-improve" id="lt-improve" onclick="setLT('improve')"><i class="ti ti-trending-up" style="font-size:11px"></i>개선</button>
+      </div>
+      <div class="loc-sec-lbl">추천 부위 <span style="font-size:9px;color:var(--tx3)">(클릭→자동핀)</span></div>
+      <div class="loc-parts-grid" id="loc-parts"></div>
+      <div class="loc-sec-lbl">위치핀 <span id="loc-pin-cnt" style="background:var(--bl-l);color:var(--bl);font-size:9px;padding:1px 5px;border-radius:7px;font-weight:700">0</span><button onclick="clearLP()" style="font-size:9px;color:var(--tx3);background:none;border:none;cursor:pointer">전체삭제</button></div>
+      <div class="loc-pin-list" id="loc-pin-list"><div class="loc-empty">도면을 클릭하세요</div></div>
+      <label class="loc-upload"><input type="file" accept="image/*" onchange="handleLocUpload(event)"><i class="ti ti-upload"></i>도면 업로드 (현재 뷰)</label>
+    </div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn" onclick="closeM('histModal')">취소</button>
+    <button class="btn btn-p" onclick="saveHist()"><i class="ti ti-check"></i>이력 등록</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ 설비 추가/수정 모달 ══ -->
+<div class="modal-wrap" id="eqModal">
+<div class="modal" style="width:760px">
+  <div class="modal-hd">
+    <div class="modal-title" id="eqMTitle"><i class="ti ti-tool" style="color:var(--bl)"></i>설비 등록</div>
+    <button class="modal-x" onclick="closeM('eqModal')"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="confirm-del" id="eqDelC"><i class="ti ti-alert-triangle"></i> 이 설비를 삭제하시겠습니까? (이력 데이터는 유지됩니다)<div style="margin-top:7px;display:flex;gap:6px"><button class="btn btn-sm" style="color:var(--rd);border-color:#fecaca" onclick="doDelEq()"><i class="ti ti-trash"></i>삭제 확인</button><button class="btn btn-sm" onclick="document.getElementById('eqDelC').style.display='none'">취소</button></div></div>
+  <div class="frow2">
+    <div class="fg"><label class="fl">설비 코드 <span class="req">*</span></label><input type="text" class="fi" id="em-code" placeholder="예: GS30E-DC"><div style="font-size:10px;color:var(--tx3);margin-top:2px">영문·숫자·하이픈, 중복불가</div></div>
+    <div class="fg"><label class="fl">기종명 <span class="req">*</span></label><input type="text" class="fi" id="em-model" placeholder="예: GS30E DC"></div>
+  </div>
+  <div class="frow1"><div class="fg"><label class="fl">설비명(전체) <span class="req">*</span></label><input type="text" class="fi" id="em-name" placeholder="예: (가접치구)GS30E Drive Chassis Fit-up Fixture"></div></div>
+  <div class="frow2">
+    <div class="fg"><label class="fl">설비유형 <span class="req">*</span></label><select class="fi" id="em-tp"><option value="">선택</option><option>가접치구</option><option>로봇설비</option><option>용접포지셔너</option><option>공용</option></select></div>
+    <div class="fg"><label class="fl">라인/위치 <span class="req">*</span></label><input type="text" class="fi" id="em-line" placeholder="예: GS30E 라인"></div>
+  </div>
+  <div class="frow2">
+    <div class="fg"><label class="fl">설치일</label><input type="date" class="fi" id="em-inst"></div>
+    <div class="fg"><label class="fl">운영 상태</label><select class="fi" id="em-st"><option>운용중</option><option>점검중</option><option>휴지</option><option>폐기</option></select></div>
+  </div>
+  <div class="frow1"><div class="fg"><label class="fl">비고</label><input type="text" class="fi" id="em-note" placeholder="특이사항"></div></div>
+
+  <div class="step-lbl"><span class="step-num">📷</span>설비 사진 (정면 / 측면 / 상면) <span style="font-size:10px;font-weight:400;color:var(--tx3)">— 수리/교체 이력 등록 시 위치선택 도면으로 함께 사용됩니다</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+    <div class="eq-photo-box" id="eqPhotoBox-front">
+      <div class="eq-photo-lbl">정면</div>
+      <div class="eq-photo-preview" id="eqPhotoPreview-front"><i class="ti ti-photo"></i></div>
+      <label class="eq-photo-upload"><input type="file" accept="image/*" onchange="handleEqPhotoUpload(event,'front')"><i class="ti ti-upload"></i>업로드</label>
+    </div>
+    <div class="eq-photo-box" id="eqPhotoBox-side">
+      <div class="eq-photo-lbl">측면</div>
+      <div class="eq-photo-preview" id="eqPhotoPreview-side"><i class="ti ti-photo"></i></div>
+      <label class="eq-photo-upload"><input type="file" accept="image/*" onchange="handleEqPhotoUpload(event,'side')"><i class="ti ti-upload"></i>업로드</label>
+    </div>
+    <div class="eq-photo-box" id="eqPhotoBox-top">
+      <div class="eq-photo-lbl">상면</div>
+      <div class="eq-photo-preview" id="eqPhotoPreview-top"><i class="ti ti-photo"></i></div>
+      <label class="eq-photo-upload"><input type="file" accept="image/*" onchange="handleEqPhotoUpload(event,'top')"><i class="ti ti-upload"></i>업로드</label>
+    </div>
+  </div>
+
+  <div class="modal-ft">
+    <button class="btn" style="color:var(--rd);border-color:#fecaca;display:none;margin-right:auto" id="eqDelBtn" onclick="document.getElementById('eqDelC').style.display='block'"><i class="ti ti-trash"></i>삭제</button>
+    <button class="btn" onclick="closeM('eqModal')">취소</button>
+    <button class="btn btn-p" onclick="saveEq()"><i class="ti ti-check"></i><span id="eqSL">등록</span></button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   Supabase DB 연결
+════════════════════════════════════════════════════════════ */
+const SUPABASE_URL = "https://dpmupfcqvnagyfkgpkau.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwbXVwZmNxdm5hZ3lma2dwa2F1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNjk5ODYsImV4cCI6MjA5Nzg0NTk4Nn0.x4pazUTP7niQSndnKsCULnQcU_q3cN-GC3edXn9DQSk";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// DB 행(row) <-> 화면용 객체(JS 한글 키) 변환
+function dbRowToHist(row){
+  return {
+    id: row.id,
+    yr: row.yr, mo: row.mo, date: row.date,
+    기종: row.model, 유형: row.equip_type, 수리: row.repair_type,
+    원인: row.cause, 원인분류: row.cause_type, 비용: row.cost,
+    내역: row.description, 비고: row.note, pins: row.pins || []
+  };
+}
+function histToDbRow(r){
+  return {
+    yr: r.yr, mo: r.mo, date: r.date,
+    model: r.기종, equip_type: r.유형, repair_type: r.수리,
+    cause: r.원인, cause_type: r.원인분류, cost: r.비용,
+    description: r.내역, note: r.비고 || null, pins: r.pins || []
+  };
+}
+function dbRowToFixture(row){
+  return {
+    code: row.code, 기종: row.model, 설비명: row.name, 유형: row.equip_type,
+    라인: row.line, 설치일: row.install_date, 상태: row.status, 비고: row.note,
+    photo_front: row.photo_front, photo_side: row.photo_side, photo_top: row.photo_top
+  };
+}
+function fixtureToDbRow(f){
+  return {
+    code: f.code, model: f.기종, name: f.설비명, equip_type: f.유형,
+    line: f.라인 || null, install_date: f.설치일 || null, status: f.상태 || '운용중',
+    note: f.비고 || null,
+    photo_front: f.photo_front || null, photo_side: f.photo_side || null, photo_top: f.photo_top || null
+  };
+}
+
+// 전체 데이터 로드 (페이지 시작 시 1회)
+async function loadAllData(){
+  try{
+    const [histRes, fxRes] = await Promise.all([
+      sb.from('history').select('*').order('date', {ascending:true}),
+      sb.from('fixtures').select('*').order('code', {ascending:true})
+    ]);
+    if(histRes.error) throw histRes.error;
+    if(fxRes.error) throw fxRes.error;
+    RAW = histRes.data.map(dbRowToHist);
+    FIXTURES = fxRes.data.map(dbRowToFixture);
+    // DB에 저장된 사진을 FIXTURE_PHOTOS 캐시에 채워넣기 (새로고침해도 유지되도록)
+    FIXTURE_PHOTOS = {};
+    FIXTURES.forEach(f=>{
+      if(f.photo_front || f.photo_side || f.photo_top){
+        FIXTURE_PHOTOS[f.code] = {front:f.photo_front||null, side:f.photo_side||null, top:f.photo_top||null};
+      }
+    });
+    return true;
+  }catch(err){
+    const msg = (err && (err.message||err.error_description||err.hint||err.code)) || '알수없는 에러';
+    console.error('데이터 로드 실패:', msg);
+    toast('⚠ 데이터 로드 실패: ' + msg);
+    return false;
+  }
+}
+
+let RAW=[];
+let FIXTURES=[];
+const EQ_PARTS={"GS32M DC":{front:["유압실린더 LH","유압실린더 RH","클램프 상부","베이스 플레이트","센터 Pin","Locator LH","Locator RH"],side:["LM 가이드","상부 프레임","하부 베이스","유압배관"],top:["FL Locator","FR Locator","RL Locator","RR Locator","센터 Pin"]},"S45XC DC":{front:["Steer bracket LH","Steer bracket RH","센터 격판 스토퍼","동심 Pin LH","동심 Pin RH","유압실린더"],side:["Hose Guard Template","Rear bracket Base","측면 유압배관"],top:["동심 Pin LH","동심 Pin RH","OSC 홀 LH","Rear bracket"]},"S85XC/Z80 DC":{front:["브라켓 LH","브라켓 RH","RGV 안착 기준면","Template 고정부"],side:["상단 스토퍼","LM 가이드"],top:["RGV 레일 LH","RGV 레일 RH","안착 기준면"]},"GS30E DC":{front:["토치바디","케이블 하네스","서보앰프","모터펌프","컨트롤러"],side:["냉각 라지에이터","배터리 팩","교정구"],top:["포지셔너 센서","그리퍼 센서"]},"공용":{front:["와이어 피더","송급모터","AIR 솔레노이드","GAS 솔레노이드","노즐클리너"],side:["어스단자","호스팩","토치 냉각수라인"],top:["컨버터","드라이브 유닛"]},"Z80 Steer Axle":{front:["유압호스 LH","유압호스 RH","실린더 Shaft","Pivot Tube 홀"],side:["Fool Proof Pin","유압 니플"],top:["좌측 홀","우측 홀"]},"default":{front:["부품 A","부품 B","클램프","베이스","Locator"],side:["측면 부품 A","측면 부품 B"],top:["상면 A","상면 B","센터"]}};
+const VIEWS=[{k:"front",l:"정면"},{k:"side",l:"측면"},{k:"top",l:"상면"}];
+const TC={repair:"#DC2626",replace:"#D97706",inspect:"#1D4ED8",improve:"#059669"};
+const TL={repair:"수리",replace:"부품교체",inspect:"점검",improve:"개선"};
+const RPC={
+  /* 가접치구 (그린/틸 계열) */
+  "Locator/Pin 교체":"#059669","유압계통 수리":"#65A30D",
+  "Template/검사게이지 교체":"#0891B2","레벨링/정밀도 조정":"#16A34A",
+  /* 로봇설비(+용접기) - 기계(블루) / 전자(퍼플) / 소모품(스카이블루) */
+  "구동부 정비":"#1D4ED8","냉각/유압 정비":"#2563EB",
+  "로봇 제어/전원 수리":"#7C3AED","로봇 센서/배선 교체":"#9333EA",
+  "용접기 제어/전원 수리":"#A21CAF",
+  "용접토치 교체":"#0EA5E9","송급계 소모품 교체":"#0284C7",
+  /* 용접포지셔너 (앰버/오렌지 계열) */
+  "위치규제 교체":"#D97706","구동부(모터/베어링) 교체":"#C2410C",
+};
+const REPAIR_BY_TYPE={
+  "가접치구":{
+    "위치규제":["Locator/Pin 교체","Template/검사게이지 교체"],
+    "동력계":["유압계통 수리"],
+    "정밀도관리":["레벨링/정밀도 조정"]
+  },
+  "로봇설비":{
+    "기계":["구동부 정비","냉각/유압 정비"],
+    "전자(로봇)":["로봇 제어/전원 수리","로봇 센서/배선 교체"],
+    "전자(용접기)":["용접기 제어/전원 수리"],
+    "소모품":["용접토치 교체","송급계 소모품 교체"]
+  },
+  "용접포지셔너":{
+    "위치규제":["위치규제 교체"],
+    "동력계":["유압계통 수리"],
+    "구동부":["구동부(모터/베어링) 교체"]
+  },
+};
+function populateRepairSelect(tp, selId){
+  const sel=document.getElementById(selId);
+  const data=REPAIR_BY_TYPE[tp];
+  if(!tp||!data){sel.innerHTML='<option value="">설비유형을 먼저 선택하세요</option>';return;}
+  if(Array.isArray(data)){
+    sel.innerHTML='<option value="">선택</option>'+data.map(r=>`<option>${r}</option>`).join("");
+  }else{
+    sel.innerHTML='<option value="">선택</option>'+Object.entries(data).map(([grp,items])=>
+      `<optgroup label="${grp}">`+items.map(r=>`<option>${r}</option>`).join("")+`</optgroup>`
+    ).join("");
+  }
+}
+const CAUSE_BY_TYPE={
+  "가접치구":["충격/파손","누유/열화(씰·배관)","개선/신규 조치","수명/정밀도 저하"],
+  "로봇설비":["부품 고장/오작동","누유/열화(씰·배관)","충격/파손","개선/신규 조치"],
+  "용접포지셔너":["충격/파손","누유/열화(씰·배관)","개선/신규 조치","수명/정밀도 저하"],
+};
+function populateCauseSelect(tp, selId){
+  const sel=document.getElementById(selId);
+  if(!tp||!CAUSE_BY_TYPE[tp]){sel.innerHTML='<option value="">설비유형을 먼저 선택하세요</option>';return;}
+  sel.innerHTML='<option value="">선택</option>'+CAUSE_BY_TYPE[tp].map(c=>`<option>${c}</option>`).join("");
+}
+const MNS=["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+const YRC={"2023":"#7C3AED","2024":"#1D4ED8","2025":"#059669","2026":"#DC2626"};
+const CAC=["#DC2626","#0EA5E9","#D97706","#7C3AED","#059669","#EA580C","#4F46E5","#65A30D","#0891B2","#9D174D","#475569","#888780"];
+const PI={dashboard:{t:"대시보드",s:"2023~2025년 · 전체 현황"},equipment:{t:"치구 현황",s:"설비 목록 관리 — 추가·수정·삭제"},history:{t:"수리/교체 이력",s:"조치이력 조회 및 위치핀 등록"},schedule:{t:"점검 일정",s:"예방정비 일정 관리"},analysis:{t:"빈도/비용 분석",s:"수리유형별 빈도 및 비용 분석"}};
+const SCHED=[
+  {code:"GS30E-DC",기종:"GS30E DC",유형:"가접치구",점검:"정기 치수검사",예정:"2026-07-22",주기:"분기",최근:"2026-04-23"},
+  {code:"GS30E-RB",기종:"GS30E DC",유형:"로봇설비",점검:"전기계통 점검",예정:"2026-07-22",주기:"분기",최근:"2026-04-23"},
+  {code:"GS32M-DC",기종:"GS32M DC",유형:"가접치구",점검:"유압 누유 점검",예정:"2026-07-19",주기:"월간",최근:"2024-03-01"},
+  {code:"GS32M-RB",기종:"GS32M DC",유형:"로봇설비",점검:"케이블/센서 점검",예정:"2026-08-18",주기:"분기",최근:"2024-03-01"},
+  {code:"S45XC-DC",기종:"S45XC DC",유형:"가접치구",점검:"Pin/Locator 마모",예정:"2026-07-16",주기:"분기",최근:"2026-04-17"},
+  {code:"S85XC-DC",기종:"S85XC/Z80 DC",유형:"가접치구",점검:"유압배관 누유",예정:"2026-06-26",주기:"월간",최근:"2026-05-27"},
+  {code:"S85XC-RB",기종:"S85XC/Z80 DC",유형:"로봇설비",점검:"RGV 레벨링",예정:"2026-11-23",주기:"반기",최근:"2026-05-27"},
+  {code:"Z40-DC",기종:"Z40 DC",유형:"가접치구",점검:"유압 호스 점검",예정:"2026-09-12",주기:"분기",최근:"2024-06-24"},
+  {code:"Z45-OSC",기종:"Z45 OSC",유형:"가접치구",점검:"실린더 오링 교체",예정:"2026-07-10",주기:"반기",최근:"2025-07-15"},
+  {code:"Z80SA",기종:"Z80 Steer Axle",유형:"가접치구",점검:"유압호스 교체 점검",예정:"2026-09-07",주기:"분기",최근:"2025-09-12"},
+  {code:"SZ-RB",기종:"공용",유형:"로봇설비",점검:"토치/송급장치 점검",예정:"2026-07-12",주기:"월간",최근:"2026-05-13"},
+  {code:"MHL-OT",기종:"Outrigger",유형:"가접치구",점검:"하부 구조 점검",예정:"2026-08-20",주기:"반기",최근:"2024-08-30"},
+  {code:"GS4655-DC",기종:"GS4655 Main Deck",유형:"가접치구",점검:"Pin 마모도 점검",예정:"2026-12-13",주기:"반기",최근:"2025-12-18"},
+  {code:"GS4655-DC2",기종:"GS4655 DC",유형:"가접치구",점검:"치수 검증 점검",예정:"2026-08-22",주기:"분기",최근:"2026-02-23"},
+  {code:"GS4655-EXT",기종:"GS4655 Extension Deck",유형:"가접치구",점검:"Locator 점검",예정:"2026-07-20",주기:"반기",최근:"2025-07-25"},
+  {code:"Z80RA",기종:"Z80 Rear Axle",유형:"가접치구",점검:"유압배관 점검",예정:"2026-08-11",주기:"분기",최근:"2025-11-14"},
+];
+let CHS={},eqCode=null,lPins=[],lView="front",lType="replace",lImgs={},lCvs,lCtx,lArea;
+let eqPhotoTemp={front:null,side:null,top:null}; // base64 strings while modal open
+let FIXTURE_PHOTOS={}; // {code: {front:base64,side:base64,top:base64}}
+const fmt=n=>Number.isFinite(n)?n.toLocaleString("ko-KR"):"-";
+const typeLabel=t=>t==="포지셔너"?"용접포지셔너":t;
+const fK=n=>{if(!Number.isFinite(n))return String(n);const man=n/10000;if(man>=1)return (man%1===0?man.toFixed(0):man.toFixed(1))+"만원";return fmt(n)+"원";};
+const pct=(a,b)=>b>0?Math.round(a/b*100):0;
+function ag(arr,k){const m={};arr.forEach(r=>{m[r[k]]=(m[r[k]]||0)+1;});return m;}
+function agC(arr,k){const m={};arr.forEach(r=>{m[r[k]]=(m[r[k]]||0)+r.비용;});return m;}
+function mk(id,cfg){if(CHS[id])CHS[id].destroy();const el=document.getElementById(id);if(!el)return;CHS[id]=new Chart(el,cfg);}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
+function resetSel(ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value="all";});}
+function closeM(id){document.getElementById(id).classList.remove("open");}
+function go(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".ni").forEach(n=>n.classList.remove("active"));
+  document.getElementById("p-"+page)?.classList.add("active");
+  document.querySelector(`[onclick*="'${page}'"]`)?.classList.add("active");
+  const inf=PI[page]||{};
+  document.getElementById("pgTitle").textContent=inf.t||"";
+  document.getElementById("pgSub").textContent=inf.s||"";
+  document.getElementById("sb-cnt").textContent=RAW.length;
+  ({dashboard:renderDB,equipment:renderEQ,history:renderHI,schedule:renderSched,analysis:renderAN})[page]?.();
+}
+
+/* ── DASHBOARD ── */
+function gDB(){const yr=document.getElementById("db-yr").value,tp=document.getElementById("db-tp").value,md=document.getElementById("db-md").value;return RAW.filter(r=>(yr==="all"||r.yr==yr)&&(tp==="all"||r.유형===tp)&&(md==="all"||r.기종===md));}
+function renderDB(){
+  const d=gDB(),tot=d.length,cost=d.reduce((s,r)=>s+r.비용,0);
+  const jig=d.filter(r=>r.유형==="가접치구").length,rob=d.filter(r=>r.유형==="로봇설비").length;
+  const pTot=d.reduce((s,r)=>s+(r.pins?.length||0),0);
+  const posCnt=d.filter(r=>r.유형==="포지셔너").length;
+  document.getElementById("db-kpi").innerHTML=`
+    <div class="kpi bl"><div class="kpi-lbl">총 이력 건수</div><div class="kpi-val">${fmt(tot)}</div><div class="kpi-sub">건</div></div>
+    <div class="kpi gn"><div class="kpi-lbl">총 조치 비용</div><div class="kpi-val">${fK(cost)}</div><div class="kpi-sub">&nbsp;</div></div>
+    <div class="kpi pu"><div class="kpi-lbl">가접치구</div><div class="kpi-val">${jig}</div><div class="kpi-sub">건 (${pct(jig,tot)}%)</div></div>
+    <div class="kpi am"><div class="kpi-lbl">로봇설비</div><div class="kpi-val">${rob}</div><div class="kpi-sub">건 (${pct(rob,tot)}%)</div></div>
+    <div class="kpi rd"><div class="kpi-lbl">용접포지셔너</div><div class="kpi-val">${posCnt}</div><div class="kpi-sub">건 (${pct(posCnt,tot)}%)</div></div>`;
+  const moM={};for(let i=1;i<=12;i++)moM[i]=0;d.forEach(r=>{if(r.mo>=1&&r.mo<=12)moM[r.mo]++;});
+  mk("c-mo",{type:"bar",data:{labels:MNS,datasets:[{label:"건수",data:Object.values(moM),backgroundColor:"#3B82F6",borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#64748B",font:{size:10}},grid:{color:"rgba(0,0,0,.04)"}},y:{ticks:{color:"#64748B",font:{size:10}},beginAtZero:true,grid:{color:"rgba(0,0,0,.04)"}}}}});
+  const tpM={가접치구:jig,로봇설비:rob,용접포지셔너:posCnt};
+  mk("c-tp",{type:"pie",data:{labels:Object.keys(tpM),datasets:[{data:Object.values(tpM),backgroundColor:["#059669","#7C3AED","#D97706"],borderWidth:2,borderColor:"#fff"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  document.getElementById("tp-leg").innerHTML=Object.entries(tpM).map(([k,v],i)=>`<span style="display:flex;align-items:center;gap:3px;margin-bottom:2px"><span style="width:8px;height:8px;border-radius:2px;background:${["#059669","#7C3AED","#D97706"][i]}"></span><span style="font-size:10px">${k} ${v}건</span></span>`).join("");
+  const yrM=ag(d,"yr"),yrK=Object.keys(yrM).sort();
+  mk("c-yr",{type:"bar",data:{labels:yrK,datasets:[{data:yrK.map(y=>yrM[y]),backgroundColor:yrK.map(y=>YRC[y]||"#888"),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#64748B",font:{size:11}},grid:{display:false}},y:{ticks:{color:"#64748B",font:{size:10}},beginAtZero:true}}}});
+  document.getElementById("yr-leg").innerHTML=yrK.map(y=>`<span style="display:flex;align-items:center;gap:3px;font-size:10px;color:#64748B"><span style="width:8px;height:8px;border-radius:2px;background:${YRC[y]}"></span>${y}년 ${yrM[y]}건</span>`).join("");
+  const mdM=ag(d,"기종"),mdE=Object.entries(mdM).sort((a,b)=>b[1]-a[1]).slice(0,10),maxM=mdE[0]?mdE[0][1]:1;
+  document.getElementById("md-bars").innerHTML=mdE.map(([k,v])=>`<div class="bar-row"><div class="bar-lbl">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxM*100)}%;background:#6366F1"></div></div><div class="bar-val">${v}건</div></div>`).join("");
+  const rpM=ag(d,"수리"),rpE=Object.entries(rpM).sort((a,b)=>b[1]-a[1]);
+  mk("c-rp",{type:"pie",data:{labels:rpE.map(e=>e[0]),datasets:[{data:rpE.map(e=>e[1]),backgroundColor:rpE.map(e=>RPC[e[0]]||"#888"),borderWidth:2,borderColor:"#fff"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  document.getElementById("rp-leg").innerHTML=rpE.map(([k,v])=>`<span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:${RPC[k]||"#888"}"></span><span>${k} ${v}건</span></span>`).join("");
+  const tgM={"가접치구":"tag-j","로봇설비":"tag-r","포지셔너":"tag-p"};
+  const rec=[...d].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20);
+  document.getElementById("db-rec").innerHTML=rec.map(r=>{
+    const ph=r.pins?.length?`<span style="background:#EFF6FF;color:#1D4ED8;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600">📍${r.pins.length}</span>`:"—";
+    return `<tr><td>${r.date}</td><td style="font-weight:600">${r.기종}</td><td><span class="tag ${tgM[r.유형]||"tag-g"}">${typeLabel(r.유형)}</span></td><td style="font-size:11px;color:#475569">${r.수리}</td><td><span class="tag tag-g" style="font-size:10px">${r.원인분류}</span></td><td style="text-align:right">${r.비용>0?fmt(r.비용):"—"}</td><td style="text-align:center">${ph}</td><td style="font-size:11px;color:#64748B;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.내역}</td></tr>`;
+  }).join("");
+}
+
+/* ── EQUIPMENT ── */
+function renderEQ(){
+  const tp=document.getElementById("eq-tp").value,st=document.getElementById("eq-st").value,kw=document.getElementById("eq-kw").value.toLowerCase();
+  const f=FIXTURES.filter(x=>(tp==="all"||x.유형===tp)&&(st==="all"||(x.상태||"운용중")===st)&&(x.기종.toLowerCase().includes(kw)||x.code.toLowerCase().includes(kw)));
+  const totJ=FIXTURES.filter(x=>x.유형==="가접치구").length,totR=FIXTURES.filter(x=>x.유형==="로봇설비").length;
+  document.getElementById("eq-kpi").innerHTML=`
+    <div class="kpi bl"><div class="kpi-lbl">등록 설비</div><div class="kpi-val">${FIXTURES.length}</div><div class="kpi-sub">대</div></div>
+    <div class="kpi pu"><div class="kpi-lbl">가접치구</div><div class="kpi-val">${totJ}</div><div class="kpi-sub">대</div></div>
+    <div class="kpi am"><div class="kpi-lbl">로봇설비</div><div class="kpi-val">${totR}</div><div class="kpi-sub">대</div></div>
+    <div class="kpi gn"><div class="kpi-lbl">용접포지셔너</div><div class="kpi-val">${FIXTURES.filter(x=>x.유형==="포지셔너").length}</div><div class="kpi-sub">대</div></div>
+    <div class="kpi rd"><div class="kpi-lbl">총 이력</div><div class="kpi-val">${RAW.length}</div><div class="kpi-sub">건</div></div>`;
+  document.getElementById("eq-cnt").textContent=`(${f.length}/${FIXTURES.length}대)`;
+  const tgM={"가접치구":"tag-j","로봇설비":"tag-r","포지셔너":"tag-p","공용":"tag-b"};
+  const stC={"운용중":"var(--gn)","점검중":"var(--am)","휴지":"var(--tx3)","폐기":"var(--rd)"};
+  document.getElementById("eq-grid").innerHTML=f.slice(0,8).map(x=>{
+    const recs=RAW.filter(r=>r.기종===x.기종),cnt=recs.length,cost=recs.reduce((s,r)=>s+r.비용,0),last=[...recs].sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const ph=FIXTURE_PHOTOS[x.code]?.front;
+    const photoHtml=`<div class="eq-card-photo">${ph?`<img src="${ph}" alt="${x.기종}">`:'<i class="ti ti-photo"></i>'}</div>`;
+    return `<div class="eqcard" onclick="openEqM('${x.code}')">${photoHtml}<div style="display:flex;align-items:center;justify-content:space-between"><span class="tag ${tgM[x.유형]||"tag-g"}">${typeLabel(x.유형)}</span><span style="font-size:10px;font-weight:600;color:${stC[x.상태||"운용중"]}">● ${x.상태||"운용중"}</span></div><div class="eqcard-name">${x.기종}</div><div class="eqcard-code">${x.code} · ${x.라인||""}</div><div class="eqcard-stats"><div><div class="eq-sv">${cnt}</div><div class="eq-sl">이력</div></div><div><div class="eq-sv" style="color:var(--gn);font-size:12px">${fK(cost)}</div><div class="eq-sl">누적비용</div></div><div><div class="eq-sv" style="color:var(--am);font-size:11px">${last?last.date.slice(0,7):"-"}</div><div class="eq-sl">최근</div></div></div></div>`;}).join("");
+  document.getElementById("eq-list").innerHTML=f.map(x=>{
+    const recs=RAW.filter(r=>r.기종===x.기종),cnt=recs.length,cost=recs.reduce((s,r)=>s+r.비용,0),last=[...recs].sort((a,b)=>b.date.localeCompare(a.date))[0],st=x.상태||"운용중";
+    const hasPhoto=FIXTURE_PHOTOS[x.code]?`<span class="tag tag-b" style="font-size:9px;margin-left:4px"><i class="ti ti-photo" style="font-size:9px"></i></span>`:"";
+    return `<tr><td><code style="font-size:11px;background:var(--gy-l);padding:1px 5px;border-radius:3px">${x.code}</code></td><td style="font-weight:600">${x.기종}${hasPhoto}</td><td style="font-size:11px;color:#64748B;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${x.설비명}">${x.설비명}</td><td><span class="tag ${tgM[x.유형]||"tag-g"}">${typeLabel(x.유형)}</span></td><td style="font-size:11px">${x.라인||"-"}</td><td style="font-size:11px;color:var(--tx3)">${x.설치일||"-"}</td><td style="text-align:center;font-weight:600;color:var(--bl)">${cnt}</td><td style="font-size:11px;color:var(--tx3)">${last?last.date:"-"}</td><td style="text-align:right;font-size:11px">${cost>0?fmt(cost):"—"}</td><td><span style="font-size:11px;font-weight:600;color:${stC[st]}">● ${st}</span></td><td style="text-align:center"><button class="btn btn-sm" onclick="openEqM('${x.code}')" style="font-size:11px;padding:3px 9px"><i class="ti ti-edit" style="font-size:11px"></i>수정</button></td></tr>`;}).join("");
+}
+function openEqM(code){
+  eqCode=code;document.getElementById("eqDelC").style.display="none";
+  ["em-code","em-model","em-name","em-line","em-inst","em-note"].forEach(id=>{document.getElementById(id).value="";document.getElementById(id).classList.remove("err");});
+  document.getElementById("em-tp").value="";document.getElementById("em-st").value="운용중";
+  eqPhotoTemp={front:null,side:null,top:null};
+  if(code){const x=FIXTURES.find(f=>f.code===code);if(!x)return;
+    document.getElementById("eqMTitle").innerHTML=`<i class="ti ti-edit" style="color:var(--bl)"></i>설비 수정`;document.getElementById("eqSL").textContent="저장";document.getElementById("eqDelBtn").style.display="inline-flex";
+    document.getElementById("em-code").value=x.code;document.getElementById("em-model").value=x.기종;document.getElementById("em-name").value=x.설비명;document.getElementById("em-tp").value=x.유형;document.getElementById("em-line").value=x.라인||"";document.getElementById("em-inst").value=x.설치일||"";document.getElementById("em-st").value=x.상태||"운용중";document.getElementById("em-note").value=x.비고||"";
+    const existing=FIXTURE_PHOTOS[code]||{};
+    eqPhotoTemp={front:existing.front||null,side:existing.side||null,top:existing.top||null};
+  }else{document.getElementById("eqMTitle").innerHTML=`<i class="ti ti-plus-circle" style="color:var(--bl)"></i>설비 추가`;document.getElementById("eqSL").textContent="등록";document.getElementById("eqDelBtn").style.display="none";}
+  renderEqPhotoPreviews();
+  document.getElementById("eqModal").classList.add("open");
+}
+function renderEqPhotoPreviews(){
+  ["front","side","top"].forEach(v=>{
+    const el=document.getElementById("eqPhotoPreview-"+v);
+    if(!el)return;
+    if(eqPhotoTemp[v]){
+      el.innerHTML=`<img src="${eqPhotoTemp[v]}" alt="${v}"><button class="eq-photo-del" onclick="removeEqPhoto('${v}',event)" title="삭제"><i class="ti ti-x"></i></button>`;
+    }else{
+      el.innerHTML=`<i class="ti ti-photo"></i>`;
+    }
+  });
+}
+function compressImage(file, maxDim=1280, quality=0.8){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        let {width:w,height:h}=img;
+        if(w>maxDim||h>maxDim){
+          if(w>h){h=Math.round(h*maxDim/w);w=maxDim;}
+          else{w=Math.round(w*maxDim/h);h=maxDim;}
+        }
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      };
+      img.onerror=reject;
+      img.src=ev.target.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function handleEqPhotoUpload(e,view){
+  const f=e.target.files[0];if(!f)return;
+  try{
+    eqPhotoTemp[view]=await compressImage(f);
+    renderEqPhotoPreviews();
+  }catch(err){
+    console.error(err);
+    toast('⚠ 이미지 처리 실패');
+  }
+  e.target.value="";
+}
+function removeEqPhoto(view,ev){ev.stopPropagation();eqPhotoTemp[view]=null;renderEqPhotoPreviews();}
+async function saveEq(){
+  const code=document.getElementById("em-code").value.trim(),model=document.getElementById("em-model").value.trim(),name=document.getElementById("em-name").value.trim(),tp=document.getElementById("em-tp").value,line=document.getElementById("em-line").value.trim();
+  let ok=true;
+  [{id:"em-code",v:code},{id:"em-model",v:model},{id:"em-name",v:name},{id:"em-line",v:line}].forEach(({id,v})=>{const el=document.getElementById(id);if(!v){el.classList.add("err");ok=false;}else el.classList.remove("err");});
+  if(!tp){document.getElementById("em-tp").classList.add("err");ok=false;}else document.getElementById("em-tp").classList.remove("err");
+  if(!ok){toast("필수 항목을 모두 입력해주세요");return;}
+  if(!eqCode&&FIXTURES.find(f=>f.code===code)){toast("이미 존재하는 설비 코드입니다");document.getElementById("em-code").classList.add("err");return;}
+  const entry={code,기종:model,설비명:name,유형:tp,라인:line,설치일:document.getElementById("em-inst").value||null,상태:document.getElementById("em-st").value,비고:document.getElementById("em-note").value,
+    photo_front:eqPhotoTemp.front||null, photo_side:eqPhotoTemp.side||null, photo_top:eqPhotoTemp.top||null};
+
+  const saveBtn=document.querySelector('#eqModal .btn-p');
+  if(saveBtn){saveBtn.disabled=true;}
+  try{
+    if(eqCode){
+      // 수정: code가 바뀌면 기존 row 삭제 후 새로 insert (PK 변경 불가), 아니면 update
+      if(eqCode!==code){
+        const {error:delErr}=await sb.from('fixtures').delete().eq('code',eqCode);
+        if(delErr) throw delErr;
+        const {error:insErr}=await sb.from('fixtures').insert(fixtureToDbRow(entry));
+        if(insErr) throw insErr;
+        FIXTURE_PHOTOS[code]=FIXTURE_PHOTOS[eqCode];delete FIXTURE_PHOTOS[eqCode];
+      }else{
+        const {error}=await sb.from('fixtures').update(fixtureToDbRow(entry)).eq('code',code);
+        if(error) throw error;
+      }
+      const i=FIXTURES.findIndex(f=>f.code===eqCode);if(i!==-1)FIXTURES[i]=entry;
+      toast(`✓ ${model} 수정 완료`);
+    }else{
+      const {error}=await sb.from('fixtures').insert(fixtureToDbRow(entry));
+      if(error) throw error;
+      FIXTURES.push(entry);toast(`✓ ${model} 등록 완료`);
+    }
+    if(eqPhotoTemp.front||eqPhotoTemp.side||eqPhotoTemp.top){FIXTURE_PHOTOS[code]={front:eqPhotoTemp.front,side:eqPhotoTemp.side,top:eqPhotoTemp.top};}
+    else if(FIXTURE_PHOTOS[code]){delete FIXTURE_PHOTOS[code];}
+    closeM("eqModal");renderEQ();rfSel();
+  }catch(err){
+    console.error(err);
+    toast('⚠ 저장 실패: '+err.message);
+  }finally{
+    if(saveBtn){saveBtn.disabled=false;}
+  }
+}
+async function doDelEq(){
+  const i=FIXTURES.findIndex(f=>f.code===eqCode);if(i===-1)return;
+  const nm=FIXTURES[i].기종;
+  try{
+    const {error}=await sb.from('fixtures').delete().eq('code',eqCode);
+    if(error) throw error;
+    delete FIXTURE_PHOTOS[eqCode];FIXTURES.splice(i,1);closeM("eqModal");renderEQ();rfSel();toast(`✓ ${nm} 삭제 완료`);
+  }catch(err){
+    console.error(err);
+    toast('⚠ 삭제 실패: '+err.message);
+  }
+}
+
+/* ── HISTORY ── */
+function initHI(){
+  const mos=document.getElementById("hi-mo");if(!mos)return;
+  mos.innerHTML="<option value='all'>전체</option>"+Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}월</option>`).join("");
+  const mds=[...new Set(RAW.map(r=>r.기종))].sort();
+  document.getElementById("hi-md").innerHTML="<option value='all'>전체</option>"+mds.map(m=>`<option>${m}</option>`).join("");
+  const rps=[...new Set(RAW.map(r=>r.수리))].sort();
+  document.getElementById("hi-rp").innerHTML="<option value='all'>전체</option>"+rps.map(r=>`<option>${r}</option>`).join("");
+}
+function gHI(){const yr=document.getElementById("hi-yr").value,mo=document.getElementById("hi-mo").value,tp=document.getElementById("hi-tp").value,md=document.getElementById("hi-md").value,rp=document.getElementById("hi-rp").value,kw=document.getElementById("hi-kw").value.toLowerCase();return RAW.filter(r=>(yr==="all"||r.yr==yr)&&(mo==="all"||r.mo==mo)&&(tp==="all"||r.유형===tp)&&(md==="all"||r.기종===md)&&(rp==="all"||r.수리===rp)&&(!kw||(r.기종.toLowerCase().includes(kw)||r.원인.toLowerCase().includes(kw)||r.내역.toLowerCase().includes(kw))));}
+function resetHI(){resetSel(["hi-yr","hi-mo","hi-tp","hi-md","hi-rp"]);document.getElementById("hi-kw").value="";renderHI();}
+function renderHI(){
+  const d=gHI().sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById("hi-cnt").textContent=`(${d.length}건)`;
+  const tgM={"가접치구":"tag-j","로봇설비":"tag-r","포지셔너":"tag-p"};
+  document.getElementById("hi-body").innerHTML=d.map((r,i)=>{
+    const ph=r.pins?.length?r.pins.map(p=>`<span style="display:inline-flex;align-items:center;gap:2px;background:${TC[p.type]}22;color:${TC[p.type]};font-size:9px;padding:1px 5px;border-radius:8px;margin:1px;font-weight:600"><span style="width:6px;height:6px;border-radius:50%;background:${TC[p.type]}"></span>${p.label}</span>`).join(""):`<span style="font-size:10px;color:var(--tx3)">—</span>`;
+    return `<tr><td style="font-size:10px;color:var(--tx3)">${i+1}</td><td style="font-weight:600">${r.yr}</td><td>${r.date}</td><td style="font-weight:600">${r.기종}</td><td><span class="tag ${tgM[r.유형]||"tag-g"}">${typeLabel(r.유형)}</span></td><td style="font-size:11px;color:#475569">${r.수리}</td><td style="font-size:11px;color:#64748B;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.원인}</td><td><span class="tag tag-g" style="font-size:10px">${r.원인분류}</span></td><td style="text-align:right;font-weight:${r.비용>0?600:400};color:${r.비용>500000?"var(--rd)":r.비용>0?"var(--tx)":"var(--tx3)"}">${r.비용>0?fmt(r.비용):"—"}</td><td style="max-width:160px">${ph}</td><td style="font-size:11px;color:#64748B;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.내역}</td><td style="font-size:11px;color:var(--tx3)">${r.비고||""}</td></tr>`;
+  }).join("");
+}
+function openHistForm(){
+  lPins=[];lView="front";lType="replace";["nf-md","nf-tp","nf-rp","nf-ca"].forEach(id=>{const el=document.getElementById(id);if(el){el.value="";el.classList.remove("err");}});
+  populateRepairSelect("","nf-rp");
+  populateCauseSelect("","nf-ca");
+  ["nf-dt","nf-cost","nf-reason","nf-desc"].forEach(id=>{const el=document.getElementById(id);if(el){el.value="";el.classList.remove("err");}});
+  document.getElementById("histModal").classList.add("open");
+  setTimeout(initLC,120);
+}
+async function saveHist(){
+  const md=document.getElementById("nf-md").value,tp=document.getElementById("nf-tp").value,rp=document.getElementById("nf-rp").value,dt=document.getElementById("nf-dt").value,ca=document.getElementById("nf-ca").value;
+  let ok=true;
+  [{id:"nf-md",v:md},{id:"nf-tp",v:tp},{id:"nf-rp",v:rp},{id:"nf-dt",v:dt},{id:"nf-ca",v:ca}].forEach(({id,v})=>{const el=document.getElementById(id);if(!v){el.classList.add("err");ok=false;}else el.classList.remove("err");});
+  if(!ok){toast("필수 항목을 모두 입력해주세요");return;}
+  const d=new Date(dt);
+  const newRec={yr:d.getFullYear(),mo:d.getMonth()+1,date:dt,기종:md,유형:tp,수리:rp,원인:document.getElementById("nf-reason").value,원인분류:ca,비용:parseInt(document.getElementById("nf-cost").value)||0,내역:document.getElementById("nf-desc").value,비고:"",pins:lPins.map(p=>({...p}))};
+
+  const saveBtn=document.querySelector('#histModal .btn-p');
+  if(saveBtn){saveBtn.disabled=true;saveBtn.innerHTML='<i class="ti ti-loader-2"></i> 저장 중...';}
+  try{
+    const {data,error}=await sb.from('history').insert(histToDbRow(newRec)).select().single();
+    if(error) throw error;
+    RAW.push(dbRowToHist(data));
+    RAW.sort((a,b)=>a.date.localeCompare(b.date));
+    closeM("histModal");renderHI();document.getElementById("sb-cnt").textContent=RAW.length;
+    toast(`✓ 이력 등록 완료 (위치핀 ${lPins.length}개)`);
+  }catch(err){
+    console.error(err);
+    toast('⚠ 저장 실패: '+err.message);
+  }finally{
+    if(saveBtn){saveBtn.disabled=false;saveBtn.innerHTML='<i class="ti ti-check"></i>이력 등록';}
+  }
+}
+
+/* ── LOCATION CANVAS ── */
+function initLC(){
+  lArea=document.getElementById("locArea");lCvs=document.getElementById("locCanvas");if(!lCvs)return;
+  lCtx=lCvs.getContext("2d");resLC();drawLC();
+  lArea.onclick=onLC;lArea.ondragover=e=>e.preventDefault();
+  lArea.ondrop=e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith("image/"))loadLImg(f);};
+  buildLVtabs();buildLParts();
+}
+function resLC(){if(!lArea||!lCvs)return;const r=lArea.getBoundingClientRect();lCvs.width=r.width||560;lCvs.height=r.height||260;}
+function getLocParts(){const md=document.getElementById("nf-md")?.value||"";return(EQ_PARTS[md]||EQ_PARTS["default"])[lView]||[];}
+function getDP(view,count){const base={front:[[.28,.62],[.72,.62],[.5,.3],[.5,.77],[.5,.54],[.28,.52],[.72,.52],[.15,.45],[.85,.45]],side:[[.32,.48],[.68,.35],[.5,.72],[.5,.28],[.3,.58],[.7,.58]],top:[[.25,.25],[.75,.25],[.25,.75],[.75,.75],[.5,.5],[.5,.28],[.5,.72]]};return(base[view]||[]).slice(0,count).map(([x,y])=>({x,y}));}
+function getFixturePhotoByModel(model,view){
+  const fx=FIXTURES.find(f=>f.기종===model);
+  if(!fx)return null;
+  return FIXTURE_PHOTOS[fx.code]?.[view]||null;
+}
+function ensureLocImgLoaded(md,view){
+  const key=md+"_"+view;
+  if(lImgs[key])return; // already loaded (session upload takes priority)
+  const photoUrl=getFixturePhotoByModel(md,view);
+  if(!photoUrl)return;
+  const img=new Image();
+  img.onload=()=>{lImgs[key]=img;if(md===(document.getElementById("nf-md")?.value)&&view===lView){drawLC();}buildLVtabs();};
+  img.src=photoUrl;
+}
+function drawLC(){
+  if(!lCtx)return;const W=lCvs.width,H=lCvs.height;lCtx.clearRect(0,0,W,H);
+  const md=document.getElementById("nf-md")?.value||"_",key=md+"_"+lView;
+  if(!lImgs[key])ensureLocImgLoaded(md,lView);
+  if(lImgs[key]){document.getElementById("locHint").classList.add("hidden");lCtx.drawImage(lImgs[key],0,0,W,H);}
+  else{document.getElementById("locHint").classList.remove("hidden");drawPH(W,H);}
+  lPins.forEach((p,i)=>drawPin(p.px*W,p.py*H,TC[p.type]||"#1D4ED8",i+1,p.label));
+}
+function drawPH(W,H){
+  lCtx.fillStyle="#F8FAFC";lCtx.fillRect(0,0,W,H);
+  lCtx.strokeStyle="#CBD5E1";lCtx.lineWidth=1.5;
+  rr(W*.08,H*.68,W*.84,H*.2,5);lCtx.stroke();
+  rr(W*.08,H*.1,W*.13,H*.6,5);lCtx.stroke();
+  rr(W*.79,H*.1,W*.13,H*.6,5);lCtx.stroke();
+  rr(W*.08,H*.07,W*.84,H*.07,3);lCtx.stroke();
+  lCtx.strokeStyle="#94A3B8";
+  rr(W*.3,H*.22,W*.4,H*.16,3);lCtx.stroke();
+  lCtx.strokeStyle="#94A3B8";lCtx.lineWidth=1;
+  [[W*.28,H*.62],[W*.72,H*.62],[W*.5,H*.54]].forEach(([x,y])=>{lCtx.beginPath();lCtx.arc(x,y,5,0,Math.PI*2);lCtx.stroke();});
+  const pts=getLocParts(),pos=getDP(lView,pts.length);
+  pts.forEach((nm,i)=>{const p=pos[i];if(!p)return;lCtx.beginPath();lCtx.arc(p.x*W,p.y*H,5,0,Math.PI*2);lCtx.fillStyle="rgba(148,163,184,.3)";lCtx.fill();lCtx.strokeStyle="rgba(100,116,139,.5)";lCtx.lineWidth=1;lCtx.stroke();lCtx.font="9px sans-serif";lCtx.fillStyle="#94A3B8";lCtx.textAlign="center";lCtx.fillText(nm,p.x*W,p.y*H-8);});
+  lCtx.font="10px sans-serif";lCtx.fillStyle="#94A3B8";lCtx.textAlign="left";const md=document.getElementById("nf-md")?.value||"설비";const vl=VIEWS.find(v=>v.k===lView)?.l||"정면";lCtx.fillText(`${md} — ${vl} (예시 스케치 · 도면 업로드 권장)`,8,14);
+}
+function rr(x,y,w,h,r){lCtx.beginPath();lCtx.moveTo(x+r,y);lCtx.lineTo(x+w-r,y);lCtx.quadraticCurveTo(x+w,y,x+w,y+r);lCtx.lineTo(x+w,y+h-r);lCtx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);lCtx.lineTo(x+r,y+h);lCtx.quadraticCurveTo(x,y+h,x,y+h-r);lCtx.lineTo(x,y+r);lCtx.quadraticCurveTo(x,y,x+r,y);lCtx.closePath();}
+function drawPin(x,y,col,num,label){
+  const R=12;lCtx.save();lCtx.translate(x,y-R);lCtx.rotate(-Math.PI/4);lCtx.beginPath();lCtx.arc(0,0,R,0,Math.PI*2);lCtx.fillStyle=col;lCtx.fill();lCtx.strokeStyle="#fff";lCtx.lineWidth=1.5;lCtx.stroke();lCtx.rotate(Math.PI/4);lCtx.font="bold 9px sans-serif";lCtx.fillStyle="#fff";lCtx.textAlign="center";lCtx.textBaseline="middle";lCtx.fillText(num,0,0);lCtx.restore();
+  lCtx.beginPath();lCtx.moveTo(x,y-R+1);lCtx.lineTo(x,y+5);lCtx.strokeStyle=col;lCtx.lineWidth=2;lCtx.stroke();
+  const tw=lCtx.measureText(label).width,lw=tw+10,lh=14;lCtx.fillStyle="rgba(15,23,42,.82)";rr(x-lw/2,y+6,lw,lh,3);lCtx.fill();lCtx.font="9px sans-serif";lCtx.fillStyle="#fff";lCtx.textAlign="center";lCtx.textBaseline="middle";lCtx.fillText(label,x,y+13);
+}
+function onLC(e){
+  const rect=lArea.getBoundingClientRect(),px=(e.clientX-rect.left)/rect.width,py=(e.clientY-rect.top)/rect.height;
+  const W=lCvs.width,H=lCvs.height;
+  const hit=lPins.findIndex(p=>{const dx=(p.px-px)*W,dy=(p.py-py)*H;return Math.sqrt(dx*dx+dy*dy)<20;});
+  if(hit!==-1){lPins.splice(hit,1);rfLC();return;}
+  const pts=getLocParts(),pos=getDP(lView,pts.length);
+  let label=TL[lType];let bd=Infinity;
+  pts.forEach((nm,i)=>{const p=pos[i];if(!p)return;const dx=p.x-px,dy=p.y-py,d=Math.sqrt(dx*dx+dy*dy);if(d<0.1&&d<bd){bd=d;label=nm;}});
+  lPins.push({px,py,type:lType,label,view:lView,viewLabel:VIEWS.find(v=>v.k===lView)?.l||lView});
+  rfLC();
+}
+function buildLVtabs(){
+  const md=document.getElementById("nf-md")?.value||"_";
+  const hasImg=v=>!!(lImgs[md+"_"+v]||getFixturePhotoByModel(md,v));
+  document.getElementById("loc-vtabs").innerHTML=VIEWS.map(v=>`<button class="lvtab${v.k===lView?" active":""}" onclick="setLV('${v.k}')">${v.l}<span class="ok">${hasImg(v.k)?"✓":""}</span></button>`).join("");
+  document.getElementById("loc-img-st").textContent=`도면 ${VIEWS.filter(v=>hasImg(v.k)).length}/3 등록`;
+}
+function buildLParts(){const pts=getLocParts();document.getElementById("loc-parts").innerHTML=pts.map(nm=>`<button class="lpb" onclick="addLP('${nm}')" title="${nm}">${nm}</button>`).join("");}
+function addLP(name){const pts=getLocParts(),idx=pts.indexOf(name),pos=getDP(lView,pts.length)[idx]||{x:.5,y:.5};lPins.push({px:pos.x,py:pos.y,type:lType,label:name,view:lView,viewLabel:VIEWS.find(v=>v.k===lView)?.l||lView});rfLC();}
+function setLV(v){lView=v;buildLVtabs();resLC();drawLC();}
+function setLT(t){lType=t;["repair","replace","inspect","improve"].forEach(k=>{const b=document.getElementById("lt-"+k);if(b){const cls={repair:"tr",replace:"tp",inspect:"ti",improve:"tv"}[k];b.className=`ltb ${cls}${k===t?" sel":""}`;}});}
+function clearLP(){lPins=[];rfLC();}
+function rfLC(){
+  drawLC();buildLParts();
+  document.getElementById("loc-pin-cnt").textContent=lPins.length;
+  const el=document.getElementById("loc-pin-list");
+  if(!lPins.length){el.innerHTML='<div class="lempty">도면을 클릭하세요</div>';return;}
+  el.innerHTML=lPins.map((p,i)=>`<div class="lpi"><div class="lpi-dot" style="background:${TC[p.type]}"></div><span style="font-size:9px;font-weight:600;color:${TC[p.type]}">${i+1}</span><span class="lpi-nm">${p.label}</span><span style="font-size:9px;color:var(--tx3)">${p.viewLabel}</span><button class="lpi-del" onclick="lPins.splice(${i},1);rfLC()">✕</button></div>`).join("");
+}
+function handleLUp(e){const f=e.target.files[0];if(f)loadLImg(f);e.target.value="";}
+function loadLImg(file){
+  const md=document.getElementById("nf-md")?.value||"_";
+  const reader=new FileReader();reader.onload=ev=>{const img=new Image();img.onload=()=>{lImgs[md+"_"+lView]=img;buildLVtabs();resLC();drawLC();};img.src=ev.target.result;};reader.readAsDataURL(file);
+}
+document.addEventListener("DOMContentLoaded",()=>{document.getElementById("nf-md")?.addEventListener("change",()=>{lPins=[];buildLVtabs();buildLParts();drawLC();});});
+
+/* ── SCHEDULE ── */
+function renderSched(){
+  const today=new Date("2026-06-24");
+  const dd=ds=>{const d=new Date(ds);return Math.ceil((d-today)/(864e5));};
+  const stT=ds=>{const d=dd(ds);if(d<0)return`<span class="tag" style="background:var(--rd-l);color:var(--rd)">기한초과</span>`;if(d<=14)return`<span class="tag" style="background:var(--am-l);color:#92400E">임박 D-${d}</span>`;return`<span class="tag tag-j">정상</span>`;};
+  const tgM={"가접치구":"tag-j","로봇설비":"tag-r"};
+  document.getElementById("sched-body").innerHTML=SCHED.map(s=>{const d=dd(s.예정);return`<tr><td><code style="font-size:11px">${s.code}</code></td><td style="font-weight:600">${s.기종}</td><td><span class="tag ${tgM[s.유형]||"tag-g"}">${typeLabel(s.유형)}</span></td><td style="font-size:11px">${s.점검}</td><td style="font-weight:600;color:${d<0?"var(--rd)":d<=14?"var(--am)":"var(--tx)"}">${s.예정}</td><td style="font-size:11px;color:var(--tx3)">${s.주기}</td><td style="font-size:11px;color:var(--tx3)">${s.최근}</td><td>${stT(s.예정)}</td></tr>`;}).join("");
+  const urgent=SCHED.filter(s=>dd(s.예정)<=14).sort((a,b)=>dd(a.예정)-dd(b.예정));
+  document.getElementById("urgent-list").innerHTML=urgent.length?urgent.map(s=>{const d=dd(s.예정);return`<div class="sitem"><span class="sdt" style="${d<0?"background:var(--rd)":"background:var(--am)"}">${d<0?"기한초과":"D-"+d}</span><div><div class="sname">${s.기종}</div><div class="sdesc">${s.점검}</div></div></div>`;}).join(""):`<div style="font-size:11px;color:var(--tx3);padding:8px 0">긴급 점검 없음</div>`;
+  const thisMonth=SCHED.filter(s=>s.예정.startsWith("2026-07"));
+  document.getElementById("month-sched").innerHTML=thisMonth.map(s=>`<div class="sitem"><span class="sdt" style="background:var(--pu)">${s.예정.slice(5)}</span><div><div class="sname">${s.기종}</div><div class="sdesc">${s.점검}</div></div></div>`).join("");
+  const mds=[...new Set(FIXTURES.map(f=>f.기종))].filter(m=>RAW.some(r=>r.기종===m));
+  document.getElementById("last-inspect").innerHTML=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px">${mds.map(m=>{const recs=RAW.filter(r=>r.기종===m).sort((a,b)=>b.date.localeCompare(a.date));return`<div style="background:var(--gy-l);border-radius:7px;padding:8px 10px"><div style="font-size:11px;font-weight:600;color:var(--tx);margin-bottom:3px">${m}</div><div style="font-size:12px;color:var(--bl);font-weight:700">${recs.length}건</div><div style="font-size:9px;color:var(--tx3);margin-top:1px">${recs[0]?recs[0].date:"-"}</div></div>`;}).join("")}</div>`;
+}
+
+/* ── ANALYSIS ── */
+function gAN(){const yr=document.getElementById("an-yr").value,tp=document.getElementById("an-tp").value;return RAW.filter(r=>(yr==="all"||r.yr==yr)&&(tp==="all"||r.유형===tp));}
+function renderAN(){
+  const d=gAN(),tot=d.length,cost=d.reduce((s,r)=>s+r.비용,0),maxC=Math.max(...d.map(r=>r.비용),0),mc=d.find(r=>r.비용===maxC);
+  document.getElementById("an-kpi").innerHTML=`
+    <div class="kpi bl"><div class="kpi-lbl">총 건수</div><div class="kpi-val">${fmt(tot)}</div><div class="kpi-sub">건</div></div>
+    <div class="kpi gn"><div class="kpi-lbl">총 비용</div><div class="kpi-val">${fK(cost)}</div><div class="kpi-sub">&nbsp;</div></div>
+    <div class="kpi am"><div class="kpi-lbl">건당 평균</div><div class="kpi-val">${fK(tot>0?Math.round(cost/tot):0)}</div><div class="kpi-sub">&nbsp;</div></div>
+    <div class="kpi rd"><div class="kpi-lbl">최대 단건</div><div class="kpi-val">${fK(maxC)}</div><div class="kpi-sub">${mc?mc.기종:""}</div></div>
+    <div class="kpi pu"><div class="kpi-lbl">위치핀 등록</div><div class="kpi-val">${d.reduce((s,r)=>s+(r.pins?.length||0),0)}</div><div class="kpi-sub">개</div></div>`;
+  const rpM=ag(d,"수리"),rpC=agC(d,"수리"),rpE=Object.entries(rpM).sort((a,b)=>b[1]-a[1]);
+  mk("c-an-rp",{type:"bar",data:{labels:rpE.map(e=>e[0]),datasets:[{label:"건수",data:rpE.map(e=>e[1]),backgroundColor:rpE.map(([k])=>RPC[k]||"#888"),borderRadius:3,yAxisID:"y"},{label:"비용",data:rpE.map(([k])=>rpC[k]||0),type:"line",borderColor:"#EF4444",backgroundColor:"rgba(239,68,68,.1)",pointRadius:3,yAxisID:"y1"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:11}}}},scales:{x:{ticks:{color:"#64748B",font:{size:10}},grid:{display:false}},y:{ticks:{color:"#64748B",font:{size:10}},beginAtZero:true},y1:{position:"right",ticks:{color:"#EF4444",font:{size:10},callback:v=>fK(v)},grid:{display:false}}}}});
+  const caM=ag(d,"원인분류"),caE=Object.entries(caM).sort((a,b)=>b[1]-a[1]);
+  mk("c-an-ca",{type:"doughnut",data:{labels:caE.map(e=>e[0]),datasets:[{data:caE.map(e=>e[1]),backgroundColor:CAC.slice(0,caE.length),borderWidth:2,borderColor:"#fff"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}});
+  document.getElementById("ca-leg").innerHTML=caE.map(([k,v],i)=>`<span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:${CAC[i]}"></span>${k} ${v}건</span>`).join("");
+  const costM=agC(d,"기종"),costE=Object.entries(costM).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,10),maxCM=costE[0]?costE[0][1]:1;
+  document.getElementById("cost-bars").innerHTML=costE.map(([k,v])=>`<div class="bar-row"><div class="bar-lbl">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/maxCM*100)}%;background:var(--gn)"></div></div><div class="bar-val">${fK(v)}</div></div>`).join("");
+  const moM={};MNS.forEach((_,i)=>moM[i+1]=0);const moCo={};MNS.forEach((_,i)=>moCo[i+1]=0);
+  d.forEach(r=>{if(r.mo>=1&&r.mo<=12){moM[r.mo]++;moCo[r.mo]+=r.비용;}});
+  mk("c-trend",{type:"bar",data:{labels:MNS,datasets:[{label:"건수",data:Object.values(moM),backgroundColor:"rgba(59,130,246,.7)",borderRadius:3,yAxisID:"y"},{label:"비용",data:Object.values(moCo),type:"line",borderColor:"#F59E0B",backgroundColor:"rgba(245,158,11,.1)",pointRadius:3,yAxisID:"y1"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"top",labels:{font:{size:11}}}},scales:{x:{ticks:{color:"#64748B",font:{size:10}},grid:{display:false}},y:{ticks:{color:"#64748B",font:{size:10}},beginAtZero:true},y1:{position:"right",ticks:{color:"#F59E0B",font:{size:10},callback:v=>fK(v)},grid:{display:false}}}}});
+  const pmD=[];const mds=[...new Set(d.map(r=>r.기종))],rps=[...new Set(d.map(r=>r.수리))];
+  mds.forEach(m=>{rps.forEach(rp=>{const recs=d.filter(r=>r.기종===m&&r.수리===rp).sort((a,b)=>a.date.localeCompare(b.date));if(recs.length>=2){const f=new Date(recs[0].date),l=new Date(recs[recs.length-1].date),avg=Math.round((l-f)/864e5/(recs.length-1)),next=new Date(l.getTime()+avg*864e5);pmD.push({기종:m,수리:rp,건수:recs.length,최초:recs[0].date,최근:recs[recs.length-1].date,간격:avg,다음:next.toISOString().slice(0,10),권장:avg<=30?"월간":avg<=90?"분기":avg<=180?"반기":"연간"});}});});
+  pmD.sort((a,b)=>a.간격-b.간격);
+  document.getElementById("pm-body").innerHTML=pmD.map(p=>`<tr><td style="font-weight:600">${p.기종}</td><td style="font-size:11px">${p.수리}</td><td style="text-align:center;color:var(--bl);font-weight:600">${p.건수}</td><td style="font-size:11px;color:var(--tx3)">${p.최초}</td><td style="font-size:11px">${p.최근}</td><td style="text-align:center;font-weight:600;color:${p.간격<=30?"var(--rd)":p.간격<=90?"var(--am)":"var(--gn)"}">${p.간격}일</td><td style="font-weight:600;color:var(--bl)">${p.다음}</td><td><span class="tag tag-b">${p.권장}</span></td></tr>`).join("");
+}
+
+/* ── refreshSelects ── */
+function rfSel(){
+  const mds=[...new Set([...FIXTURES.map(f=>f.기종),...RAW.map(r=>r.기종)])].sort();
+  const dbM=document.getElementById("db-md");if(dbM){const pv=dbM.value;dbM.innerHTML="<option value='all'>전체</option>"+mds.map(m=>`<option${m===pv?" selected":""}>${m}</option>`).join("");}
+  const nfM=document.getElementById("nf-md");if(nfM)nfM.innerHTML="<option value=''>선택</option>"+mds.map(m=>`<option>${m}</option>`).join("");
+  const hiM=document.getElementById("hi-md");if(hiM)hiM.innerHTML="<option value='all'>전체</option>"+mds.map(m=>`<option>${m}</option>`).join("");
+}
+window.addEventListener("load",async ()=>{
+  document.body.insertAdjacentHTML('beforeend','<div id="loadingOverlay" style="position:fixed;inset:0;background:#F1F5F9;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px"><div style="width:32px;height:32px;border:3px solid #E2E8F0;border-top-color:#1D4ED8;border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:13px;color:#64748B">데이터 불러오는 중...</div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>');
+  const ok = await loadAllData();
+  document.getElementById('loadingOverlay')?.remove();
+  initHI();rfSel();
+  window.addEventListener("resize",()=>{if(lCvs&&lArea){resLC();drawLC();}});
+  renderDB();
+  if(ok) toast(`✓ 데이터 로드 완료 (이력 ${RAW.length}건, 설비 ${FIXTURES.length}대)`);
+});
+
+</script>
+</body>
+</html>
