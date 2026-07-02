@@ -247,7 +247,7 @@ select:focus,input:focus{outline:none;border-color:var(--bl)}
     <button class="btn btn-sm" onclick="resetHI()"><i class="ti ti-refresh"></i></button>
     <button class="btn btn-p btn-sm" onclick="openHistForm()" style="margin-left:auto"><i class="ti ti-plus"></i>이력 등록</button>
   </div>
-  <div class="card"><div class="ct-title" style="justify-content:space-between"><span><i class="ti ti-clipboard-list"></i>수리/교체 이력 <span id="hi-cnt" style="font-size:10px;font-weight:400;color:var(--tx3)"></span></span></div><div class="tbl-wrap" style="max-height:530px"><table class="tbl"><thead><tr><th>NO</th><th>년도</th><th>발생일자</th><th>기종</th><th>유형</th><th>수리유형</th><th>발생원인</th><th>원인분류</th><th>비용(원)</th><th>위치핀</th><th>내역</th><th>비고</th></tr></thead><tbody id="hi-body"></tbody></table></div></div>
+  <div class="card"><div class="ct-title" style="justify-content:space-between"><span><i class="ti ti-clipboard-list"></i>수리/교체 이력 <span id="hi-cnt" style="font-size:10px;font-weight:400;color:var(--tx3)"></span></span></div><div class="tbl-wrap" style="max-height:530px"><table class="tbl"><thead><tr><th>NO</th><th>년도</th><th>발생일자</th><th>기종</th><th>유형</th><th>수리유형</th><th>발생원인</th><th>원인분류</th><th>비용(원)</th><th>조치자</th><th>조치시간</th><th>위치핀</th><th>내역</th><th>비고</th></tr></thead><tbody id="hi-body"></tbody></table></div></div>
 </div>
 
 <!-- ══ SCHEDULE ══ -->
@@ -303,6 +303,10 @@ select:focus,input:focus{outline:none;border-color:var(--bl)}
   <div class="frow2">
     <div class="fg"><label class="fl">발생원인 상세</label><input type="text" class="fi" id="nf-reason" placeholder="발생 원인 상세 입력"></div>
     <div class="fg"><label class="fl">수리/조치 내역</label><input type="text" class="fi" id="nf-desc" placeholder="조치 내역 입력"></div>
+  </div>
+  <div class="frow2">
+    <div class="fg"><label class="fl">조치자</label><input type="text" class="fi" id="nf-worker" placeholder="예: 홍길동"></div>
+    <div class="fg"><label class="fl">조치 시간</label><input type="text" class="fi" id="nf-duration" placeholder="예: 1.5hr, 3hr"></div>
   </div>
   <div class="step-lbl"><span class="step-num">2</span>교체/수리 위치 지정 <span style="font-size:10px;font-weight:400;color:var(--tx3)">(도면 클릭→핀 추가 · 핀 클릭→삭제 · 추천부위 클릭→자동핀)</span></div>
   <div class="loc-wrap">
@@ -418,7 +422,8 @@ function dbRowToHist(row){
     yr: row.yr, mo: row.mo, date: row.date,
     기종: row.model, 유형: row.equip_type, 수리: row.repair_type,
     원인: row.cause, 원인분류: row.cause_type, 비용: row.cost,
-    내역: row.description, 비고: row.note, pins: row.pins || []
+    내역: row.description, 비고: row.note, pins: row.pins || [],
+    조치자: row.worker || "", 조치시간: row.duration || ""
   };
 }
 function histToDbRow(r){
@@ -426,7 +431,8 @@ function histToDbRow(r){
     yr: r.yr, mo: r.mo, date: r.date,
     model: r.기종, equip_type: r.유형, repair_type: r.수리,
     cause: r.원인, cause_type: r.원인분류, cost: r.비용,
-    description: r.내역, note: r.비고 || null, pins: r.pins || []
+    description: r.내역, note: r.비고 || null, pins: r.pins || [],
+    worker: r.조치자 || null, duration: r.조치시간 || null
   };
 }
 function dbRowToFixture(row){
@@ -767,14 +773,14 @@ function renderHI(){
   const tgM={"가접치구":"tag-j","로봇설비":"tag-r","포지셔너":"tag-p"};
   document.getElementById("hi-body").innerHTML=d.map((r,i)=>{
     const ph=r.pins?.length?r.pins.map(p=>`<span style="display:inline-flex;align-items:center;gap:2px;background:${TC[p.type]}22;color:${TC[p.type]};font-size:9px;padding:1px 5px;border-radius:8px;margin:1px;font-weight:600"><span style="width:6px;height:6px;border-radius:50%;background:${TC[p.type]}"></span>${p.label}</span>`).join(""):`<span style="font-size:10px;color:var(--tx3)">—</span>`;
-    return `<tr><td style="font-size:10px;color:var(--tx3)">${i+1}</td><td style="font-weight:600">${r.yr}</td><td>${r.date}</td><td style="font-weight:600">${r.기종}</td><td><span class="tag ${tgM[r.유형]||"tag-g"}">${typeLabel(r.유형)}</span></td><td style="font-size:11px;color:#475569">${r.수리}</td><td style="font-size:11px;color:#64748B;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.원인}</td><td><span class="tag tag-g" style="font-size:10px">${r.원인분류}</span></td><td style="text-align:right;font-weight:${r.비용>0?600:400};color:${r.비용>500000?"var(--rd)":r.비용>0?"var(--tx)":"var(--tx3)"}">${r.비용>0?fmt(r.비용):"—"}</td><td style="max-width:160px">${ph}</td><td style="font-size:11px;color:#64748B;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.내역}</td><td style="font-size:11px;color:var(--tx3)">${r.비고||""}</td></tr>`;
+    return `<tr><td style="font-size:10px;color:var(--tx3)">${i+1}</td><td style="font-weight:600">${r.yr}</td><td>${r.date}</td><td style="font-weight:600">${r.기종}</td><td><span class="tag ${tgM[r.유형]||"tag-g"}">${typeLabel(r.유형)}</span></td><td style="font-size:11px;color:#475569">${r.수리}</td><td style="font-size:11px;color:#64748B;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.원인}</td><td><span class="tag tag-g" style="font-size:10px">${r.원인분류}</span></td><td style="text-align:right;font-weight:${r.비용>0?600:400};color:${r.비용>500000?"var(--rd)":r.비용>0?"var(--tx)":"var(--tx3)"}">${r.비용>0?fmt(r.비용):"—"}</td><td style="font-size:11px;color:var(--tx2);white-space:nowrap">${r.조치자||"—"}</td><td style="font-size:11px;color:var(--tx2);white-space:nowrap">${r.조치시간||"—"}</td><td style="max-width:160px">${ph}</td><td style="font-size:11px;color:#64748B;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.내역}</td><td style="font-size:11px;color:var(--tx3)">${r.비고||""}</td></tr>`;
   }).join("");
 }
 function openHistForm(){
   lPins=[];lView="front";lType="replace";["nf-md","nf-tp","nf-rp","nf-ca"].forEach(id=>{const el=document.getElementById(id);if(el){el.value="";el.classList.remove("err");}});
   populateRepairSelect("","nf-rp");
   populateCauseSelect("","nf-ca");
-  ["nf-dt","nf-cost","nf-reason","nf-desc"].forEach(id=>{const el=document.getElementById(id);if(el){el.value="";el.classList.remove("err");}});
+  ["nf-dt","nf-cost","nf-reason","nf-desc","nf-worker","nf-duration"].forEach(id=>{const el=document.getElementById(id);if(el){el.value="";el.classList.remove("err");}});
   document.getElementById("histModal").classList.add("open");
   setTimeout(initLC,120);
 }
@@ -784,7 +790,8 @@ async function saveHist(){
   [{id:"nf-md",v:md},{id:"nf-tp",v:tp},{id:"nf-rp",v:rp},{id:"nf-dt",v:dt},{id:"nf-ca",v:ca}].forEach(({id,v})=>{const el=document.getElementById(id);if(!v){el.classList.add("err");ok=false;}else el.classList.remove("err");});
   if(!ok){toast("필수 항목을 모두 입력해주세요");return;}
   const d=new Date(dt);
-  const newRec={yr:d.getFullYear(),mo:d.getMonth()+1,date:dt,기종:md,유형:tp,수리:rp,원인:document.getElementById("nf-reason").value,원인분류:ca,비용:parseInt(document.getElementById("nf-cost").value)||0,내역:document.getElementById("nf-desc").value,비고:"",pins:lPins.map(p=>({...p}))};
+  const newRec={yr:d.getFullYear(),mo:d.getMonth()+1,date:dt,기종:md,유형:tp,수리:rp,원인:document.getElementById("nf-reason").value,원인분류:ca,비용:parseInt(document.getElementById("nf-cost").value)||0,내역:document.getElementById("nf-desc").value,비고:"",pins:lPins.map(p=>({...p})),
+    조치자:document.getElementById("nf-worker").value.trim(),조치시간:document.getElementById("nf-duration").value.trim()};
 
   const saveBtn=document.querySelector('#histModal .btn-p');
   if(saveBtn){saveBtn.disabled=true;saveBtn.innerHTML='<i class="ti ti-loader-2"></i> 저장 중...';}
@@ -849,7 +856,12 @@ function drawPH(W,H){
   [[W*.28,H*.62],[W*.72,H*.62],[W*.5,H*.54]].forEach(([x,y])=>{lCtx.beginPath();lCtx.arc(x,y,5,0,Math.PI*2);lCtx.stroke();});
   const pts=getLocParts(),pos=getDP(lView,pts.length);
   pts.forEach((nm,i)=>{const p=pos[i];if(!p)return;lCtx.beginPath();lCtx.arc(p.x*W,p.y*H,5,0,Math.PI*2);lCtx.fillStyle="rgba(148,163,184,.3)";lCtx.fill();lCtx.strokeStyle="rgba(100,116,139,.5)";lCtx.lineWidth=1;lCtx.stroke();lCtx.font="9px sans-serif";lCtx.fillStyle="#94A3B8";lCtx.textAlign="center";lCtx.fillText(nm,p.x*W,p.y*H-8);});
-  lCtx.font="10px sans-serif";lCtx.fillStyle="#94A3B8";lCtx.textAlign="left";const md=document.getElementById("nf-md")?.value||"설비";const vl=VIEWS.find(v=>v.k===lView)?.l||"정면";lCtx.fillText(`${md} — ${vl} (예시 스케치 · 도면 업로드 권장)`,8,14);
+  // 상단 경고 배너: 이건 예시일 뿐, 실제 사진 아님을 분명하게 표시
+  lCtx.fillStyle="rgba(217,119,6,.92)";
+  lCtx.fillRect(0,0,W,20);
+  lCtx.font="bold 10px sans-serif";lCtx.fillStyle="#fff";lCtx.textAlign="left";
+  const md=document.getElementById("nf-md")?.value||"설비";const vl=VIEWS.find(v=>v.k===lView)?.l||"정면";
+  lCtx.fillText(`⚠ 예시 스케치 (${md} ${vl} 실제사진 미등록) — 치구 현황에서 사진 등록 시 자동 표시`,6,14);
 }
 function rr(x,y,w,h,r){lCtx.beginPath();lCtx.moveTo(x+r,y);lCtx.lineTo(x+w-r,y);lCtx.quadraticCurveTo(x+w,y,x+w,y+r);lCtx.lineTo(x+w,y+h-r);lCtx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);lCtx.lineTo(x+r,y+h);lCtx.quadraticCurveTo(x,y+h,x,y+h-r);lCtx.lineTo(x,y+r);lCtx.quadraticCurveTo(x,y,x+r,y);lCtx.closePath();}
 function drawPin(x,y,col,num,label){
@@ -872,7 +884,15 @@ function buildLVtabs(){
   const md=document.getElementById("nf-md")?.value||"_";
   const hasImg=v=>!!(lImgs[md+"_"+v]||getFixturePhotoByModel(md,v));
   document.getElementById("loc-vtabs").innerHTML=VIEWS.map(v=>`<button class="lvtab${v.k===lView?" active":""}" onclick="setLV('${v.k}')">${v.l}<span class="ok">${hasImg(v.k)?"✓":""}</span></button>`).join("");
-  document.getElementById("loc-img-st").textContent=`도면 ${VIEWS.filter(v=>hasImg(v.k)).length}/3 등록`;
+  const cnt=VIEWS.filter(v=>hasImg(v.k)).length;
+  const stEl=document.getElementById("loc-img-st");
+  if(cnt===3){
+    stEl.innerHTML=`<span style="color:#059669;font-weight:600">✓ 실제 설비사진 3/3 등록됨</span>`;
+  }else if(cnt>0){
+    stEl.innerHTML=`<span style="color:#D97706;font-weight:600">실제 사진 ${cnt}/3 등록 (나머지는 예시 스케치)</span>`;
+  }else{
+    stEl.innerHTML=`<span style="color:#94A3B8">실제 사진 없음 — <a href="#" onclick="go('equipment');closeM('histModal');return false;" style="color:#1D4ED8;text-decoration:underline">치구 현황에서 등록</a></span>`;
+  }
 }
 function buildLParts(){const pts=getLocParts();document.getElementById("loc-parts").innerHTML=pts.map(nm=>`<button class="lpb" onclick="addLP('${nm}')" title="${nm}">${nm}</button>`).join("");}
 function addLP(name){const pts=getLocParts(),idx=pts.indexOf(name),pos=getDP(lView,pts.length)[idx]||{x:.5,y:.5};lPins.push({px:pos.x,py:pos.y,type:lType,label:name,view:lView,viewLabel:VIEWS.find(v=>v.k===lView)?.l||lView});rfLC();}
